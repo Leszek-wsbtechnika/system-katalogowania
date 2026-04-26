@@ -476,9 +476,9 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
       </div>
     </div>
     <div class="header-title">
-      <div class="sys-label">Naczepy · Przyczepy · i Inne</div>
+      <div class="sys-label">Naczepy · Przyczepy ·i· Inne</div>
       <h1>// KATALOG //</h1>
-      <p>Znajdź lub dodaj części/link dostawy</p>
+      <p>Znajdź lub dodaj części/link dostawcy</p>
     </div>
     <span class="print-date" style="display:none" id="print-date"></span>
     <div class="header-status">
@@ -945,7 +945,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ============================================================  STATE  */
 const DEFAULT_CATS = ['Naczepa','Przyczepa','Ciągnik rolniczy'];
 const VAT = 0.23;
-const ALLOWED_DOMAINS = []; // np. ['@gmail.com', '@firma.pl'] — pusta = brak ograniczeń
+const ALLOWED_DOMAINS = ['@gmail.com', '@pzu.pl']; // np. ['@gmail.com', '@firma.pl'] — pusta = brak ograniczeń
 const LS = { theme:'katalog_theme', view:'katalog_view', zest:'katalog_zest' };
 
 let parts      = [];
