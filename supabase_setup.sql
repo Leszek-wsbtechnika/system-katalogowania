@@ -112,3 +112,14 @@ CREATE POLICY "delete_photos" ON storage.objects FOR DELETE TO authenticated USI
 
 -- 6. PO REJESTRACJI: zmień swoją rolę na admin
 -- UPDATE public.profiles SET role = 'admin' WHERE email = 'twój@email.com';
+
+-- 7. MIGRACJA: zmiana nazwy kategorii 'Przyczepa' → 'Przyczepki'
+-- Uruchom TYLKO jeśli masz dane z kategorią 'Przyczepa':
+-- UPDATE parts SET category = REPLACE(category, 'Przyczepa', 'Przyczepki')
+--   WHERE category = 'Przyczepa' OR category LIKE 'Przyczepa/%';
+-- UPDATE custom_cats SET name = REPLACE(name, 'Przyczepa', 'Przyczepki')
+--   WHERE name = 'Przyczepa' OR name LIKE 'Przyczepa/%';
+
+-- 8. ZDJĘCIA KATEGORII: przechowywane w Storage bucket 'photos' w folderze 'cat_images/'
+-- Admin może uploadować przez przycisk 📷 w Zarządzaniu kategoriami.
+-- Ścieżka: cat_images/{encodeURIComponent(nazwa_kategorii)}.jpg
