@@ -952,15 +952,15 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <div id="login-step2" style="display:none">
       <div class="login-otp-hint" id="login-otp-hint"></div>
       <div class="login-field">
-        <label>Kod weryfikacyjny (6 cyfr)</label>
-        <input type="text" id="login-code" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')verifyOtpCode()">
+        <label>Kod weryfikacyjny (8 cyfr)</label>
+        <input type="text" id="login-code" placeholder="00000000" maxlength="8" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')verifyOtpCode()">
       </div>
       <button class="login-btn" id="login-verify-btn" onclick="verifyOtpCode()">Weryfikuj</button>
       <button class="login-back" onclick="loginStep(1)">← Zmień e-mail</button>
     </div>
     <div class="login-msg" id="login-msg"></div>
     <div class="login-hint">
-      Otrzymasz e-mail z 6-cyfrowym kodem.<br>
+      Otrzymasz e-mail z 8-cyfrowym kodem.<br>
       Wpisz kod — zostaniesz automatycznie zalogowany.<br><br>
       <strong style="color:var(--muted-lt)">Wymagane uruchomienie przez HTTP:</strong><br>
       <code style="color:var(--primary)">python3 -m http.server 8080</code><br>
@@ -1278,7 +1278,7 @@ async function sendOtpCode() {
 
 async function verifyOtpCode() {
   const code = document.getElementById('login-code').value.trim();
-  if (!/^\d{6}$/.test(code)) { loginMsg('Wpisz 6-cyfrowy kod z e-maila', 'error'); return; }
+  if (!/^\d{8}$/.test(code)) { loginMsg('Wpisz 8-cyfrowy kod z e-maila', 'error'); return; }
 
   const btn = document.getElementById('login-verify-btn');
   btn.disabled = true; btn.textContent = 'Weryfikowanie…';
