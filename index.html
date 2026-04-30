@@ -963,9 +963,6 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <div class="login-hint">
       Otrzymasz e-mail z 8-cyfrowym kodem.<br>
       Wpisz kod — zostaniesz automatycznie zalogowany.<br><br>
-      <!-- <strong style="color:var(--muted-lt)">Wymagane uruchomienie przez HTTP:</strong><br>
-      <code style="color:var(--primary)">python3 -m http.server 8080</code><br>
-      następnie otwórz <a href="http://localhost:8080" target="_blank">http://localhost:8080</a> -->
     </div>
   </div>
 </div>
@@ -1305,34 +1302,30 @@ async function logout() {
 }
 
 /* ============================================================  DATA LOAD  */
-// Pobiera WSZYSTKIE rekordy z tabeli z paginacją (omija limit 1000 Supabase)
-async function fetchAll(table, orderCol) {
+async function fetchAll(fn) {
   const PAGE = 1000;
   let from = 0, all = [];
   while (true) {
-    const { data, error } = await sb
-      .from(table)
-      .select('*')
-      .order(orderCol, { ascending: false })
-      .range(from, from + PAGE - 1);
-    if (error) { toast(`Błąd ładowania ${table}: ` + error.message, 'error'); break; }
-    all = all.concat(data || []);
-    if ((data || []).length < PAGE) break;
+    const { data, error } = await fn().range(from, from + PAGE - 1);
+    if (error) return { data: null, error };
+    all.push(...data);
+    if (data.length < PAGE) return { data: all, error: null };
     from += PAGE;
   }
-  return all;
 }
 
 async function loadData() {
-  const [parts_raw, cr, links_raw] = await Promise.all([
-    fetchAll('parts', 'added_at'),
-    sb.from('custom_cats').select('name'),
-    fetchAll('links', 'added_at'),
+  const [pr, cr, lr] = await Promise.all([
+    fetchAll(() => sb.from('parts').select('*').order('added_at', { ascending: false })),
+    fetchAll(() => sb.from('custom_cats').select('name')),
+    fetchAll(() => sb.from('links').select('*').order('added_at', { ascending: false })),
   ]);
+  if (pr.error) { toast('Błąd ładowania części: ' + pr.error.message, 'error'); }
   if (cr.error) { toast('Błąd ładowania kategorii: ' + cr.error.message, 'error'); }
-  parts      = parts_raw.map(dbToPart);
+  if (lr.error) { toast('Błąd ładowania linków: ' + lr.error.message, 'error'); }
+  parts      = (pr.data || []).map(dbToPart);
   customCats = (cr.data || []).map(r => r.name);
-  links      = links_raw.map(dbToLink);
+  links      = (lr.data || []).map(dbToLink);
   partNames  = [...new Set(parts.map(p => p.name))].sort((a,b) => a.localeCompare(b,'pl'));
   await loadCatImages();
 }
@@ -1342,8 +1335,7 @@ async function loadCatImages() {
   const { data } = await sb.storage.from('photos').list('cat_images');
   if (!data) return;
   data.forEach(f => {
-    // decodeURIComponent naprawia kategorie z polskimi znakami i spacjami
-    const cat = decodeURIComponent(f.name.replace(/\.jpg$/i, ''));
+    const cat = f.name.replace(/\.jpg$/i, '');
     const { data: { publicUrl } } = sb.storage.from('photos').getPublicUrl('cat_images/' + f.name);
     catImgs[cat] = publicUrl;
   });
