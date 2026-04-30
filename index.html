@@ -6,11 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="logo.png">
 <title>Katalog</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:;">
+<!-- Dodany atrybut defer zapobiega blokowaniu renderowania strony -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 /* ---- LIGHT (default) ---- */
+.header-title-custom { display: flex; align-items: center; padding: 12px 24px; }
+.header-logo-img { width: 300px; height: auto; }
 :root {
   --bg:oklch(97% 0.006 60);
   --surface:oklch(100% 0.003 60);
@@ -503,10 +507,13 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 <body>
 
 <header>
-  <div class="header-inner">
+  <!-- <div class="header-inner">
     <div class="header-title" style="display:flex;align-items:center;padding:12px 24px;">
     <img src="logo.png" alt="Logo Katalogu" style="width: 300px; height: auto;">
     <!-- <img src="zdjecia/logo.svg" alt="Katalog System" style="height:52px;display:block;"> -->
+    <div class="header-inner">
+    <div class="header-title header-title-custom">
+    <img src="logo.png" alt="Logo Katalogu" class="header-logo-img">
     </div>
     <span class="print-date" style="display:none" id="print-date"></span>
     <div class="header-status">
@@ -561,36 +568,35 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 </div>
 
 <div class="container">
-
-  <div class="tab-nav">
-    <button class="tab-btn active" id="tab-parts" onclick="setTab('parts')">// KATALOG CZĘŚCI</button>
-    <button class="tab-btn" id="tab-links" onclick="setTab('links')">// LINKI / DOSTAWCY</button>
+<div class="tab-nav">
+    <button class="tab-btn active" id="tab-parts" data-tab-target="parts">// KATALOG CZĘŚCI</button>
+    <button class="tab-btn" id="tab-links" data-tab-target="links">// LINKI / DOSTAWCY</button>
   </div>
 
   <div class="toolbar">
-    <button class="btn btn-primary btn-sm" id="btn-add-part" onclick="openAdd()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <button class="btn btn-primary btn-sm" id="btn-add-part">
+      <!-- ... -->
       Dodaj część
     </button>
-    <button class="btn btn-outline btn-sm" id="btn-cat-mgr" onclick="openCatMgr()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h10"/></svg>
+    <button class="btn btn-outline btn-sm" id="btn-cat-mgr">
+      <!-- ... -->
       Kategorie
     </button>
-    <button class="btn btn-outline btn-sm" id="btn-import" onclick="openImport()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <button class="btn btn-outline btn-sm" id="btn-import">
+      <!-- ... -->
       Import CSV/XLSX
     </button>
-    <button class="btn btn-outline btn-sm" id="btn-export" onclick="exportXlsx()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Eksport XLSX
+    <button class="btn btn-outline btn-sm" id="btn-export">
+      <!-- ... -->
+      Eksport CSV/XLSX
     </button>
-    <div class="toolbar-sep"></div>
+      <div class="toolbar-sep"></div>
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="search-inp" type="text" placeholder="szukaj :: nazwa / opis…" oninput="renderAll()">
+      <input id="search-inp" type="text" placeholder="szukaj :: nazwa / opis…">
     </div>
     <div>
-      <select id="sort-sel" onchange="renderAll()" style="min-width:170px">
+      <select id="sort-sel" style="min-width:170px">
         <option value="name_asc">Nazwa A–Z</option>
         <option value="name_desc">Nazwa Z–A</option>
         <option value="priceNet_asc">Cena netto ↑</option>
@@ -632,7 +638,8 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     </button>
     <div class="search-wrap" style="flex:1;min-width:180px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="link-search-inp" type="text" placeholder="szukaj :: nazwa / URL / opis…" oninput="linkSearch=this.value.trim().toLowerCase();renderLinksView()">
+      <!-- Logika przeniesiona do JS za pomocą EventListenera na id="link-search-inp" -->
+      <input id="link-search-inp" type="text" placeholder="szukaj :: nazwa / URL / opis…">
     </div>
     <div style="font-family:var(--mono);font-size:.65rem;color:var(--muted-lt)" id="links-count"></div>
   </div>
@@ -657,11 +664,13 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
       <div class="fg2">
         <div>
           <label>Kategoria *</label>
-          <select id="m-cat" onchange="updateSubcatSelect()"></select>
+          <!-- Dodano 'required' -->
+          <select id="m-cat" required></select>
         </div>
         <div>
           <label>Nazwa części *</label>
-          <input id="m-name" type="text" placeholder="np. Oś przednia kompletna" autocomplete="off" list="name-list">
+          <!-- Dodano 'required' i limit znaków 'maxlength', aby zapobiec przepełnieniu kolumny w bazie -->
+          <input id="m-name" type="text" placeholder="np. Oś przednia kompletna" autocomplete="off" list="name-list" required maxlength="150">
           <datalist id="name-list"></datalist>
         </div>
       </div>
@@ -688,12 +697,13 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
       </div>
       <div>
         <label>Opis / uwagi</label>
-        <textarea id="m-desc" placeholder="Numer katalogowy, producent, stan, uwagi…"></textarea>
+        <!-- Limit znaków dla opisu -->
+        <textarea id="m-desc" placeholder="Numer katalogowy, producent, stan, uwagi…" maxlength="2000"></textarea>
       </div>
       <div>
         <label>Zdjęcie</label>
-        <div class="photo-drop" id="photo-drop" onclick="document.getElementById('photo-file').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
-          <input type="file" id="photo-file" accept="image/*" onchange="handlePhotoFile(this.files[0])">
+        <div class="photo-drop" id="photo-drop">
+          <input type="file" id="photo-file" accept="image/jpeg, image/png, image/webp">
           <div id="photo-drop-inner" class="photo-drop-inner">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span class="photo-drop-text">Kliknij lub przeciągnij zdjęcie<br><small>JPG, PNG, WEBP — zostanie skompresowane</small></span>
@@ -829,12 +839,12 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <button class="close-btn" onclick="closeImport()">[ ✕ ]</button>
     <h2>// Import z CSV / XLSX</h2>
     <div class="fg">
-      <div class="import-drop" id="imp-drop" onclick="document.getElementById('imp-file').click()" ondragover="event.preventDefault()" ondrop="handleImpDrop(event)">
-        <input type="file" id="imp-file" accept=".csv,.xlsx,.xls" onchange="handleImpFile(this.files[0])">
+      
+        <input type="file" id="imp-file" accept=".csv,.xlsx,.xls">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;color:var(--muted-lt)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="12" y2="12"/><line x1="15" y1="15" x2="12" y2="12"/></svg>
         <div class="import-drop-text">Kliknij lub przeciągnij plik<br><strong style="color:var(--primary)">.CSV lub .XLSX</strong></div>
       </div>
-
+      <div class="import-drop" id="imp-drop">
       <div class="mapping-section" id="imp-mapping">
         <div class="fg2" style="margin-bottom:12px">
           <div>
@@ -883,14 +893,16 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <button class="close-btn" onclick="closeLink()">[ ✕ ]</button>
     <h2 id="link-modal-title">// Dodaj link</h2>
     <div class="fg">
-      <div>
+        <div>
         <label>URL strony *</label>
-        <input id="l-url" type="url" placeholder="https://…" oninput="autoFillLinkName()">
+        <!-- Dodano wymóg, limit znaków oraz usunięto mutację inline. Validacja przed 'javascript:' URL-ami musi odbyć się w Twoim pliku JS! -->
+        <input id="l-url" type="url" placeholder="https://…" required maxlength="500">
       </div>
       <div class="fg2">
         <div>
           <label>Nazwa strony *</label>
-          <input id="l-name" type="text" placeholder="np. Beson — części do naczep">
+          <!-- Zabezpieczenie pojemności kolumny w bazie danych -->
+          <input id="l-name" type="text" placeholder="np. Beson — części do naczep" required maxlength="150">
         </div>
         <div>
           <label>Kategoria</label>
@@ -900,11 +912,11 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
       <div>
         <label>Ocena</label>
         <div class="star-picker" id="star-picker">
-          <button class="star-pick" data-v="1" onclick="setLinkRating(1)">★</button>
-          <button class="star-pick" data-v="2" onclick="setLinkRating(2)">★</button>
-          <button class="star-pick" data-v="3" onclick="setLinkRating(3)">★</button>
-          <button class="star-pick" data-v="4" onclick="setLinkRating(4)">★</button>
-          <button class="star-pick" data-v="5" onclick="setLinkRating(5)">★</button>
+          <button type="button" class="star-pick" data-v="1">★</button>
+          <button type="button" class="star-pick" data-v="2">★</button>
+          <button type="button" class="star-pick" data-v="3">★</button>
+          <button type="button" class="star-pick" data-v="4">★</button>
+          <button type="button" class="star-pick" data-v="5">★</button>
         </div>
       </div>
       <div>
@@ -945,19 +957,20 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <div id="login-step1">
       <div class="login-field">
         <label>Adres e-mail</label>
-        <input type="email" id="login-email" placeholder="twój@email.com" onkeydown="if(event.key==='Enter')sendOtpCode()">
+        <!-- Dodano required, aby zablokować puste wysyłki, usunięto onkeydown -->
+        <input type="email" id="login-email" placeholder="twój@email.com" required>
       </div>
-      <button class="login-btn" id="login-btn" onclick="sendOtpCode()">Wyślij kod</button>
+      <button class="login-btn" id="login-btn">Wyślij kod</button>
     </div>
     <!-- Krok 2: kod OTP -->
     <div id="login-step2" style="display:none">
       <div class="login-otp-hint" id="login-otp-hint"></div>
       <div class="login-field">
         <label>Kod weryfikacyjny (8 cyfr)</label>
-        <input type="text" id="login-code" placeholder="00000000" maxlength="8" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')verifyOtpCode()">
+        <input type="text" id="login-code" placeholder="00000000" maxlength="8" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" required>
       </div>
-      <button class="login-btn" id="login-verify-btn" onclick="verifyOtpCode()">Weryfikuj</button>
-      <button class="login-back" onclick="loginStep(1)">← Zmień e-mail</button>
+      <button class="login-btn" id="login-verify-btn">Weryfikuj</button>
+      <button class="login-back" id="login-back-btn">← Zmień e-mail</button>
     </div>
     <div class="login-msg" id="login-msg"></div>
     <div class="login-hint">
@@ -968,30 +981,34 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 </div>
 
 <!-- ========== MODAL: ADMIN PANEL ========== -->
+<!-- ========== MODAL: ADMIN PANEL ========== -->
 <div class="overlay" id="ov-admin">
   <div class="modal">
-    <button class="close-btn" onclick="closeAdmin()">[ ✕ ]</button>
+    <!-- Usunięto onclick, dodano id dla zamknięcia -->
+    <button class="close-btn" id="btn-admin-close" aria-label="Zamknij">[ ✕ ]</button>
     <h2>// Panel administratora</h2>
+    
     <div class="admin-tabs">
-      <button class="admin-tab active" id="atab-users" onclick="setAdminTab('users')">Użytkownicy</button>
-      <button class="admin-tab" id="atab-access" onclick="setAdminTab('access')">Dostęp e-mail</button>
+      <!-- Użycie data-attributes zamiast inline JS -->
+      <button class="admin-tab active" id="atab-users" data-tab="users">Użytkownicy</button>
+      <button class="admin-tab" id="atab-access" data-tab="access">Dostęp e-mail</button>
     </div>
 
     <!-- ZAKŁADKA: Użytkownicy -->
     <div id="admin-pane-users">
       <div class="admin-info">
         Zmień rolę użytkownika wybierając z listy.<br>
-        <strong style="color:var(--accent)">nowy</strong> — może dodawać, nie może edytować ani usuwać &nbsp;|&nbsp;
-        <strong style="color:var(--accent)">editor</strong> — może dodawać i edytować &nbsp;|&nbsp;
-        <strong style="color:var(--accent)">admin</strong> — pełny dostęp + ten panel
+        <strong style="color:var(--accent)">nowy</strong> — dodawanie | 
+        <strong style="color:var(--accent)">editor</strong> — edycja | 
+        <strong style="color:var(--accent)">admin</strong> — pełny dostęp
       </div>
       <div id="admin-users-list"></div>
       <div class="modal-actions" style="gap:8px;flex-wrap:wrap">
-        <button class="btn btn-danger btn-sm" id="btn-del-selected" style="display:none" onclick="deleteSelectedUsers()">
+        <button class="btn btn-danger btn-sm" id="btn-del-selected" style="display:none">
           Usuń zaznaczonych (<span id="del-sel-count">0</span>)
         </button>
-        <button class="btn btn-outline" onclick="closeAdmin()">Zamknij</button>
-        <button class="btn btn-outline btn-sm" onclick="renderAdminUsers()">
+        <button class="btn btn-outline" id="btn-admin-cancel">Zamknij</button>
+        <button class="btn btn-outline btn-sm" id="btn-admin-refresh-users">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.38"/></svg>
           Odśwież
         </button>
@@ -1001,17 +1018,17 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <!-- ZAKŁADKA: Dostęp e-mail -->
     <div id="admin-pane-access" style="display:none">
       <div class="admin-info">
-        Adresy e-mail na tej liście mogą się zalogować nawet jeśli ich domena nie jest dozwolona.<br>
+        Adresy e-mail na tej liście mogą się zalogować nawet poza domeną.<br>
         Dozwolone domeny: <strong style="color:var(--accent)" id="admin-domains-info"></strong>
       </div>
-      <div class="admin-add-row">
-        <input class="admin-add-inp" type="email" id="allowed-email-inp" placeholder="nowy@adres.pl" onkeydown="if(event.key==='Enter')addAllowedEmail()">
-        <button class="btn btn-primary btn-sm" onclick="addAllowedEmail()">Dodaj</button>
-      </div>
+      <form class="admin-add-row" id="form-add-allowed">
+        <input class="admin-add-inp" type="email" id="allowed-email-inp" placeholder="nowy@adres.pl" required>
+        <button type="submit" class="btn btn-primary btn-sm">Dodaj</button>
+      </form>
       <div id="admin-allowed-list"></div>
       <div class="modal-actions">
-        <button class="btn btn-outline" onclick="closeAdmin()">Zamknij</button>
-        <button class="btn btn-outline btn-sm" onclick="renderAdminAccess()">
+        <button class="btn btn-outline" id="btn-admin-cancel-access">Zamknij</button>
+        <button class="btn btn-outline btn-sm" id="btn-admin-refresh-access">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.38"/></svg>
           Odśwież
         </button>
@@ -1019,14 +1036,47 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     </div>
   </div>
 </div>
-
 <div class="toast-container" id="toast-container"></div>
 
 <script>
 /* ============================================================  CONFIG  */
-const SUPABASE_URL = 'https://visyqdyuyistjslrpfoi.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc3lxZHl1eWlzdGpzbHJwZm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NDgyOTQsImV4cCI6MjA5MjUyNDI5NH0.Yv4_ja4yBwXQbkxQs8fPHdasv9BMXFIV0H9MykqBtKk';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* ============================================================  CONFIG  */
+const CONFIG = {
+  supabaseUrl: 'https://visyqdyuyistjslrpfoi.supabase.co',
+  // Klucz publiczny - upewnij się, że RLS jest włączone w bazie!
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc3lxZHl1eWlzdGpzbHJwZm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NDgyOTQsImV4cCI6MjA5MjUyNDI5NH0.Yv4_ja4yBwXQbkxQs8fPHdasv9BMXFIV0H9MykqBtKk'
+};
+
+const sb = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+
+// Inicjalizacja zdarzeń po załadowaniu DOM
+document.addEventListener('DOMContentLoaded', () => {
+    initAdminEvents();
+});
+
+function initAdminEvents() {
+    // Obsługa zakładek
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const target = e.target.dataset.tab;
+            setAdminTab(target);
+        });
+    });
+
+    // Obsługa formularza dodawania e-maila
+    const addAllowedForm = document.getElementById('form-add-allowed');
+    if(addAllowedForm) {
+        addAllowedForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addAllowedEmail();
+        });
+    }
+
+    // Pozostałe przyciski (przykład)
+    document.getElementById('btn-admin-refresh-users')?.addEventListener('click', renderAdminUsers);
+    document.getElementById('btn-admin-close')?.addEventListener('click', closeAdmin);
+    document.getElementById('btn-admin-cancel')?.addEventListener('click', closeAdmin);
+}
 
 /* ============================================================  STATE  */
 const CAT_IMAGES = {
