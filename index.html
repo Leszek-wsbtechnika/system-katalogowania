@@ -1114,6 +1114,19 @@ let currentUser = null;
 let currentRole = 'nowy';
 let appReady    = false;
 
+// Pomocnicza funkcja do ucieczki znaków HTML (ochrona przed XSS)
+const esc = (str) => {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
+let allUsers = []; // Tablica na profile wszystkich użytkowników dla Admina
+
 /* ============================================================  AUTH  */
 async function initAuth() {
   const { data:{ session } } = await sb.auth.getSession();
@@ -1137,6 +1150,7 @@ async function initAuth() {
     // TOKEN_REFRESHED i INITIAL_SESSION ignorujemy — nie przeładowujemy danych
   });
 }
+
 async function loadProfile() {
   try {
     // maybeSingle() nie rzuca błędu, gdy nie znajdzie wiersza
@@ -1155,11 +1169,6 @@ async function loadProfile() {
     console.error('Błąd loadProfile:', e);
     currentRole = 'nowy'; // Fallback dla bezpieczeństwa
   }
-}
-
-async function loadProfile() {
-  const { data } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
-  currentRole = data?.role || 'nowy';
 }
 
 function updateUserInfo() {
@@ -1214,37 +1223,48 @@ function showApp() {
   updateUserInfo();
   applyRoleUI();
   renderAll();
-  updateZestFloat();
-  initStarHover();
-  document.getElementById('print-date').textContent = 'Wydruk: ' + new Date().toLocaleDateString('pl-PL');
+  
+  if(typeof updateZestFloat === 'function') updateZestFloat();
+  if(typeof initStarHover === 'function') initStarHover();
+  
+  const printDateEl = document.getElementById('print-date');
+  if (printDateEl) printDateEl.textContent = 'Wydruk: ' + new Date().toLocaleDateString('pl-PL');
+  
+  // Wyrenderuj listę użytkowników od razu, jeśli użytkownik to admin
+  if (currentRole === 'admin') {
+    if(typeof renderAdminUsers === 'function') renderAdminUsers();
+  }
+  
   goHome();
 }
 
 function goHome() {
   const hp = document.getElementById('home-page');
   const main = document.querySelector('#app-container > .container');
-  hp.style.display = '';
-  main.style.display = 'none';
+  if (hp) hp.style.display = '';
+  if (main) main.style.display = 'none';
   renderHomePage();
 }
 
 function renderHomePage() {
   const cats = topCats();
   const grid = document.getElementById('home-tiles-grid');
+  if (!grid) return;
+  
   grid.innerHTML = cats.map(cat => {
     const imgSrc = getCatImg(cat);
     const cnt = parts.filter(p => catTop(p.category) === cat || p.category === cat).length;
     const imgHtml = imgSrc
-      ? `<img src="${imgSrc}" alt="${cat}" loading="lazy">`
+      ? `<img src="${imgSrc}" alt="${esc(cat)}" loading="lazy">`
       : `<div class="home-tile-ph">
            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
              <rect x="3" y="3" width="18" height="18"/><path d="M3 9h18M9 21V9"/>
            </svg>
          </div>`;
-    return `<div class="home-tile" onclick="goToCategory(this.dataset.cat)" data-cat="${cat.replace(/"/g,'&quot;')}">
+    return `<div class="home-tile" onclick="goToCategory('${esc(cat)}')" data-cat="${esc(cat)}">
       <div class="home-tile-img">${imgHtml}</div>
       <div class="home-tile-footer">
-        <div class="home-tile-name">${cat}</div>
+        <div class="home-tile-name">${esc(cat)}</div>
         <div class="home-tile-count">${cnt} ${cnt === 1 ? 'część' : 'części'}</div>
       </div>
     </div>`;
@@ -1268,18 +1288,18 @@ function renderHomePage() {
 function goToCategory(cat) {
   const hp = document.getElementById('home-page');
   const main = document.querySelector('#app-container > .container');
-  hp.style.display = 'none';
-  main.style.display = '';
+  if (hp) hp.style.display = 'none';
+  if (main) main.style.display = '';
   setCat(cat);
-  setTab('parts');
+  if(typeof setTab === 'function') setTab('parts');
 }
 
 function goToLinks() {
   const hp = document.getElementById('home-page');
   const main = document.querySelector('#app-container > .container');
-  hp.style.display = 'none';
-  main.style.display = '';
-  setTab('links');
+  if (hp) hp.style.display = 'none';
+  if (main) main.style.display = '';
+  if(typeof setTab === 'function') setTab('links');
 }
 
 function setLoadingTxt(t) {
@@ -1342,7 +1362,6 @@ async function verifyOtpCode() {
     loginMsg('Nieprawidłowy lub wygasły kod. Spróbuj ponownie.', 'error');
     btn.disabled = false; btn.textContent = 'Weryfikuj';
   }
-  // sukces: onAuthStateChange → SIGNED_IN → afterSignIn()
 }
 
 function loginMsg(msg, type) {
@@ -1372,18 +1391,35 @@ async function fetchAll(fn) {
 }
 
 async function loadData() {
-  const [pr, cr, lr] = await Promise.all([
+  // 1. Podstawowe dane dostępne dla każdego
+  const requests = [
     fetchAll(() => sb.from('parts').select('*').order('added_at', { ascending: false })),
     fetchAll(() => sb.from('custom_cats').select('name')),
     fetchAll(() => sb.from('links').select('*').order('added_at', { ascending: false })),
-  ]);
-  if (pr.error) { toast('Błąd ładowania części: ' + pr.error.message, 'error'); }
-  if (cr.error) { toast('Błąd ładowania kategorii: ' + cr.error.message, 'error'); }
-  if (lr.error) { toast('Błąd ładowania linków: ' + lr.error.message, 'error'); }
+  ];
+
+  // 2. Jeśli admin, pobierz dodatkowo listę wszystkich użytkowników
+  if (currentRole === 'admin') {
+    requests.push(sb.from('profiles').select('id, email, role').order('email'));
+  }
+
+  const results = await Promise.all(requests);
+  const [pr, cr, lr, ur] = results;
+
+  if (pr.error && typeof toast === 'function') toast('Błąd ładowania części: ' + pr.error.message, 'error');
+  if (cr.error && typeof toast === 'function') toast('Błąd ładowania kategorii: ' + cr.error.message, 'error');
+  if (lr.error && typeof toast === 'function') toast('Błąd ładowania linków: ' + lr.error.message, 'error');
+  
   parts      = (pr.data || []).map(dbToPart);
   customCats = (cr.data || []).map(r => r.name);
   links      = (lr.data || []).map(dbToLink);
-  partNames  = [...new Set(parts.map(p => p.name))].sort((a,b) => a.localeCompare(b,'pl'));
+  
+  // Przypisanie użytkowników dla panelu admina
+  if (ur && !ur.error) {
+    allUsers = ur.data;
+  }
+
+  partNames = [...new Set(parts.map(p => p.name))].sort((a,b) => a.localeCompare(b,'pl'));
   await loadCatImages();
 }
 
@@ -1420,17 +1456,22 @@ function save() {
 
 function updateStorage() {
   const total = parts.length + links.length;
-  document.getElementById('storage-txt').textContent = `${total} rekordów`;
+  const storageTxtEl = document.getElementById('storage-txt');
+  if(storageTxtEl) storageTxtEl.textContent = `${total} rekordów`;
+  
   const bar = document.getElementById('storage-bar');
-  const pct = Math.min(100, Math.round(total / 500 * 100));
-  bar.style.width = pct + '%';
-  bar.className = 'storage-bar-inner' + (pct >= 100 ? ' full' : pct >= 80 ? ' warn' : '');
+  if (bar) {
+    const pct = Math.min(100, Math.round(total / 500 * 100));
+    bar.style.width = pct + '%';
+    bar.className = 'storage-bar-inner' + (pct >= 100 ? ' full' : pct >= 80 ? ' warn' : '');
+  }
 }
 
 /* ============================================================  THEME  */
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
-  document.getElementById('theme-lbl').textContent = t==='dark' ? 'DZIEŃ' : 'NOC';
+  const themeLbl = document.getElementById('theme-lbl');
+  if (themeLbl) themeLbl.textContent = t === 'dark' ? 'DZIEŃ' : 'NOC';
   localStorage.setItem(LS.theme, t);
 }
 function toggleTheme() { applyTheme(document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark'); }
@@ -1452,13 +1493,20 @@ function catSub(path) { const i=(path||'').indexOf('/'); return i>=0 ? path.slic
 function countInTop(top) { return parts.filter(p=>catTop(p.category)===top).length; }
 function catIndex(cat) { const top = catTop(cat); const i = topCats().indexOf(top); return i>=0 ? i%6 : 0; }
 function catBadge(cat) { return `<span class="cat-badge cb-${catIndex(cat)}">${esc(cat)}</span>`; }
-function getCatImg(cat) { return catImgs[cat] || CAT_IMAGES[cat] || null; }
+function getCatImg(cat) { 
+  if (typeof CAT_IMAGES !== 'undefined') return catImgs[cat] || CAT_IMAGES[cat] || null; 
+  return catImgs[cat] || null;
+}
 function registerName(n) { n=n.trim(); if(n&&!partNames.includes(n)){partNames.push(n);partNames.sort((a,b)=>a.localeCompare(b,'pl'));} }
 
 /* ============================================================  FILTER & SORT  */
 function getFiltered() {
-  const q = document.getElementById('search-inp').value.trim().toLowerCase();
-  const [field, dir] = document.getElementById('sort-sel').value.split('_');
+  const searchInp = document.getElementById('search-inp');
+  const sortSel = document.getElementById('sort-sel');
+  
+  const q = searchInp ? searchInp.value.trim().toLowerCase() : '';
+  const sortVal = sortSel ? sortSel.value : 'name_asc';
+  const [field, dir] = sortVal.split('_');
   const isAsc = dir === 'asc';
 
   return parts
@@ -1486,6 +1534,47 @@ function getFiltered() {
     });
 }
 
+/* ============================================================  ADMIN PANEL (dodane) */
+function renderAdminUsers() {
+  const container = document.getElementById('admin-users-list');
+  if (!container) return;
+
+  if (allUsers.length === 0) {
+    container.innerHTML = '<div class="admin-empty">Brak użytkowników lub brak uprawnień.</div>';
+    return;
+  }
+
+  container.innerHTML = allUsers.map(user => {
+    const isSelf = user.id === currentUser.id;
+    return `
+      <div class="admin-user-row ${isSelf ? 'admin-self' : ''}">
+        <div class="admin-email" title="${esc(user.email)}">${esc(user.email)} ${isSelf ? '(TY)' : ''}</div>
+        <select class="admin-role-sel" 
+                onchange="updateUserRole('${user.id}', this.value)" 
+                ${isSelf ? 'disabled' : ''}>
+          <option value="nowy" ${user.role === 'nowy' ? 'selected' : ''}>NOWY</option>
+          <option value="editor" ${user.role === 'editor' ? 'selected' : ''}>EDITOR</option>
+          <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>ADMIN</option>
+        </select>
+      </div>
+    `;
+  }).join('');
+}
+
+async function updateUserRole(userId, newRole) {
+  const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', userId);
+  
+  if (error) {
+    if (typeof toast === 'function') toast('Błąd zmiany roli: ' + error.message, 'error');
+    renderAdminUsers(); // Przywróć stan z pamięci w razie błędu
+  } else {
+    if (typeof toast === 'function') toast('Rola zaktualizowana pomyślnie', 'success');
+    // Aktualizujemy lokalną tablicę, żeby widok był spójny
+    const user = allUsers.find(u => u.id === userId);
+    if (user) user.role = newRole;
+  }
+}
+ 
 /* ============================================================  RENDER ALL  */
 function renderAll() { renderCatFilter(); renderSummary(); renderContent(); updateZestFloat(); }
 
