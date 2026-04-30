@@ -1137,17 +1137,24 @@ async function initAuth() {
     // TOKEN_REFRESHED i INITIAL_SESSION ignorujemy — nie przeładowujemy danych
   });
 }
-
-async function afterSignIn() {
-  setLoadingTxt('WCZYTYWANIE DANYCH…');
+async function loadProfile() {
   try {
-    await loadProfile();
-    await loadData();
-  } catch(e) {
-    toast('Błąd bazy danych — sprawdź czy SQL setup był uruchomiony w Supabase.', 'error', 10000);
-    console.error('afterSignIn error:', e);
+    // maybeSingle() nie rzuca błędu, gdy nie znajdzie wiersza
+    const { data, error } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
+    
+    if (error) throw error;
+    
+    if (data) {
+      currentRole = data.role;
+    } else {
+      // Profil jeszcze nie istnieje (np. opóźnienie triggera)
+      currentRole = 'nowy';
+      console.warn('Profil nie został jeszcze utworzony w bazie.');
+    }
+  } catch (e) {
+    console.error('Błąd loadProfile:', e);
+    currentRole = 'nowy'; // Fallback dla bezpieczeństwa
   }
-  showApp();
 }
 
 async function loadProfile() {
@@ -1451,24 +1458,32 @@ function registerName(n) { n=n.trim(); if(n&&!partNames.includes(n)){partNames.p
 /* ============================================================  FILTER & SORT  */
 function getFiltered() {
   const q = document.getElementById('search-inp').value.trim().toLowerCase();
-  const [field,dir] = document.getElementById('sort-sel').value.split('_');
-  const asc = dir==='asc';
-  let result = parts.filter(p => {
-    if (drillCat) {
-      if (catTop(p.category) !== drillCat) return false;
-      if (filterCat !== '' && p.category !== filterCat) return false;
-    } else if (filterCat !== '') {
-      if (catTop(p.category) !== filterCat) return false;
-    }
-    if (q) { const hay=(p.name+' '+p.desc+' '+p.category).toLowerCase(); if(!hay.includes(q)) return false; }
-    return true;
-  });
-  result.sort((a,b) => {
-    let va=a[field]??'', vb=b[field]??'';
-    if(typeof va==='string') return asc ? va.localeCompare(vb,'pl') : vb.localeCompare(va,'pl');
-    return asc ? va-vb : vb-va;
-  });
-  return result;
+  const [field, dir] = document.getElementById('sort-sel').value.split('_');
+  const isAsc = dir === 'asc';
+
+  return parts
+    .filter(p => {
+      // 1. Filtrowanie po kategorii (drill-down)
+      const top = catTop(p.category);
+      if (drillCat && top !== drillCat) return false;
+      if (filterCat && p.category !== filterCat && top !== filterCat) return false;
+      
+      // 2. Filtrowanie po frazie (search)
+      if (q) {
+        return (p.name + ' ' + p.desc + ' ' + p.category).toLowerCase().includes(q);
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const va = a[field] ?? '';
+      const vb = b[field] ?? '';
+      
+      const comparison = typeof va === 'string' 
+        ? va.localeCompare(vb, 'pl') 
+        : va - vb;
+        
+      return isAsc ? comparison : -comparison;
+    });
 }
 
 /* ============================================================  RENDER ALL  */
