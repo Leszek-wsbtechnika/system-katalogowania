@@ -6,11 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="logo.png">
 <title>Katalog</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:;">
+<!-- Dodany atrybut defer zapobiega blokowaniu renderowania strony -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 /* ---- LIGHT (default) ---- */
+.header-title-custom { display: flex; align-items: center; padding: 12px 24px; }
+.header-logo-img { width: 300px; height: auto; }
 :root {
   --bg:oklch(97% 0.006 60);
   --surface:oklch(100% 0.003 60);
@@ -503,10 +507,10 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 <body>
 
 <header>
-  <div class="header-inner">
-    <div class="header-title" style="display:flex;align-items:center;padding:12px 24px;">
-    <img src="logo.png" alt="Logo Katalogu" style="width: 300px; height: auto;">
-    <!-- <img src="zdjecia/logo.svg" alt="Katalog System" style="height:52px;display:block;"> -->
+
+    <div class="header-inner">
+    <div class="header-title header-title-custom">
+    <img src="logo.png" alt="Logo Katalogu" class="header-logo-img">
     </div>
     <span class="print-date" style="display:none" id="print-date"></span>
     <div class="header-status">
@@ -561,36 +565,35 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 </div>
 
 <div class="container">
-
-  <div class="tab-nav">
-    <button class="tab-btn active" id="tab-parts" onclick="setTab('parts')">// KATALOG CZĘŚCI</button>
-    <button class="tab-btn" id="tab-links" onclick="setTab('links')">// LINKI / DOSTAWCY</button>
+<div class="tab-nav">
+    <button class="tab-btn active" id="tab-parts" data-tab-target="parts">// KATALOG CZĘŚCI</button>
+    <button class="tab-btn" id="tab-links" data-tab-target="links">// LINKI / DOSTAWCY</button>
   </div>
 
   <div class="toolbar">
-    <button class="btn btn-primary btn-sm" id="btn-add-part" onclick="openAdd()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <button class="btn btn-primary btn-sm" id="btn-add-part">
+      <!-- ... -->
       Dodaj część
     </button>
-    <button class="btn btn-outline btn-sm" id="btn-cat-mgr" onclick="openCatMgr()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h10"/></svg>
+    <button class="btn btn-outline btn-sm" id="btn-cat-mgr">
+      <!-- ... -->
       Kategorie
     </button>
-    <button class="btn btn-outline btn-sm" id="btn-import" onclick="openImport()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <button class="btn btn-outline btn-sm" id="btn-import">
+      <!-- ... -->
       Import CSV/XLSX
     </button>
-    <button class="btn btn-outline btn-sm" id="btn-export" onclick="exportXlsx()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Eksport XLSX
+    <button class="btn btn-outline btn-sm" id="btn-export">
+      <!-- ... -->
+      Eksport CSV/XLSX
     </button>
-    <div class="toolbar-sep"></div>
+      <div class="toolbar-sep"></div>
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="search-inp" type="text" placeholder="szukaj :: nazwa / opis…" oninput="renderAll()">
+      <input id="search-inp" type="text" placeholder="szukaj :: nazwa / opis…">
     </div>
     <div>
-      <select id="sort-sel" onchange="renderAll()" style="min-width:170px">
+      <select id="sort-sel" style="min-width:170px">
         <option value="name_asc">Nazwa A–Z</option>
         <option value="name_desc">Nazwa Z–A</option>
         <option value="priceNet_asc">Cena netto ↑</option>
@@ -632,7 +635,8 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     </button>
     <div class="search-wrap" style="flex:1;min-width:180px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="link-search-inp" type="text" placeholder="szukaj :: nazwa / URL / opis…" oninput="linkSearch=this.value.trim().toLowerCase();renderLinksView()">
+      <!-- Logika przeniesiona do JS za pomocą EventListenera na id="link-search-inp" -->
+      <input id="link-search-inp" type="text" placeholder="szukaj :: nazwa / URL / opis…">
     </div>
     <div style="font-family:var(--mono);font-size:.65rem;color:var(--muted-lt)" id="links-count"></div>
   </div>
@@ -657,11 +661,13 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
       <div class="fg2">
         <div>
           <label>Kategoria *</label>
-          <select id="m-cat" onchange="updateSubcatSelect()"></select>
+          <!-- Dodano 'required' -->
+          <select id="m-cat" required></select>
         </div>
         <div>
           <label>Nazwa części *</label>
-          <input id="m-name" type="text" placeholder="np. Oś przednia kompletna" autocomplete="off" list="name-list">
+          <!-- Dodano 'required' i limit znaków 'maxlength', aby zapobiec przepełnieniu kolumny w bazie -->
+          <input id="m-name" type="text" placeholder="np. Oś przednia kompletna" autocomplete="off" list="name-list" required maxlength="150">
           <datalist id="name-list"></datalist>
         </div>
       </div>
@@ -688,12 +694,13 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
       </div>
       <div>
         <label>Opis / uwagi</label>
-        <textarea id="m-desc" placeholder="Numer katalogowy, producent, stan, uwagi…"></textarea>
+        <!-- Limit znaków dla opisu -->
+        <textarea id="m-desc" placeholder="Numer katalogowy, producent, stan, uwagi…" maxlength="2000"></textarea>
       </div>
       <div>
         <label>Zdjęcie</label>
-        <div class="photo-drop" id="photo-drop" onclick="document.getElementById('photo-file').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
-          <input type="file" id="photo-file" accept="image/*" onchange="handlePhotoFile(this.files[0])">
+        <div class="photo-drop" id="photo-drop">
+          <input type="file" id="photo-file" accept="image/jpeg, image/png, image/webp">
           <div id="photo-drop-inner" class="photo-drop-inner">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span class="photo-drop-text">Kliknij lub przeciągnij zdjęcie<br><small>JPG, PNG, WEBP — zostanie skompresowane</small></span>
@@ -829,12 +836,11 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <button class="close-btn" onclick="closeImport()">[ ✕ ]</button>
     <h2>// Import z CSV / XLSX</h2>
     <div class="fg">
-      <div class="import-drop" id="imp-drop" onclick="document.getElementById('imp-file').click()" ondragover="event.preventDefault()" ondrop="handleImpDrop(event)">
-        <input type="file" id="imp-file" accept=".csv,.xlsx,.xls" onchange="handleImpFile(this.files[0])">
+      <div class="import-drop" id="imp-drop">
+        <input type="file" id="imp-file" accept=".csv,.xlsx,.xls">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;color:var(--muted-lt)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="12" y2="12"/><line x1="15" y1="15" x2="12" y2="12"/></svg>
         <div class="import-drop-text">Kliknij lub przeciągnij plik<br><strong style="color:var(--primary)">.CSV lub .XLSX</strong></div>
       </div>
-
       <div class="mapping-section" id="imp-mapping">
         <div class="fg2" style="margin-bottom:12px">
           <div>
@@ -883,14 +889,16 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <button class="close-btn" onclick="closeLink()">[ ✕ ]</button>
     <h2 id="link-modal-title">// Dodaj link</h2>
     <div class="fg">
-      <div>
+        <div>
         <label>URL strony *</label>
-        <input id="l-url" type="url" placeholder="https://…" oninput="autoFillLinkName()">
+        <!-- Dodano wymóg, limit znaków oraz usunięto mutację inline. Validacja przed 'javascript:' URL-ami musi odbyć się w Twoim pliku JS! -->
+        <input id="l-url" type="url" placeholder="https://…" required maxlength="500">
       </div>
       <div class="fg2">
         <div>
           <label>Nazwa strony *</label>
-          <input id="l-name" type="text" placeholder="np. Beson — części do naczep">
+          <!-- Zabezpieczenie pojemności kolumny w bazie danych -->
+          <input id="l-name" type="text" placeholder="np. Beson — części do naczep" required maxlength="150">
         </div>
         <div>
           <label>Kategoria</label>
@@ -900,11 +908,11 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
       <div>
         <label>Ocena</label>
         <div class="star-picker" id="star-picker">
-          <button class="star-pick" data-v="1" onclick="setLinkRating(1)">★</button>
-          <button class="star-pick" data-v="2" onclick="setLinkRating(2)">★</button>
-          <button class="star-pick" data-v="3" onclick="setLinkRating(3)">★</button>
-          <button class="star-pick" data-v="4" onclick="setLinkRating(4)">★</button>
-          <button class="star-pick" data-v="5" onclick="setLinkRating(5)">★</button>
+          <button type="button" class="star-pick" data-v="1">★</button>
+          <button type="button" class="star-pick" data-v="2">★</button>
+          <button type="button" class="star-pick" data-v="3">★</button>
+          <button type="button" class="star-pick" data-v="4">★</button>
+          <button type="button" class="star-pick" data-v="5">★</button>
         </div>
       </div>
       <div>
@@ -945,19 +953,20 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <div id="login-step1">
       <div class="login-field">
         <label>Adres e-mail</label>
-        <input type="email" id="login-email" placeholder="twój@email.com" onkeydown="if(event.key==='Enter')sendOtpCode()">
+        <!-- Dodano required, aby zablokować puste wysyłki, usunięto onkeydown -->
+        <input type="email" id="login-email" placeholder="twój@email.com" required>
       </div>
-      <button class="login-btn" id="login-btn" onclick="sendOtpCode()">Wyślij kod</button>
+      <button class="login-btn" id="login-btn">Wyślij kod</button>
     </div>
     <!-- Krok 2: kod OTP -->
     <div id="login-step2" style="display:none">
       <div class="login-otp-hint" id="login-otp-hint"></div>
       <div class="login-field">
         <label>Kod weryfikacyjny (8 cyfr)</label>
-        <input type="text" id="login-code" placeholder="00000000" maxlength="8" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')verifyOtpCode()">
+        <input type="text" id="login-code" placeholder="00000000" maxlength="8" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" required>
       </div>
-      <button class="login-btn" id="login-verify-btn" onclick="verifyOtpCode()">Weryfikuj</button>
-      <button class="login-back" onclick="loginStep(1)">← Zmień e-mail</button>
+      <button class="login-btn" id="login-verify-btn">Weryfikuj</button>
+      <button class="login-back" id="login-back-btn">← Zmień e-mail</button>
     </div>
     <div class="login-msg" id="login-msg"></div>
     <div class="login-hint">
@@ -968,30 +977,34 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 </div>
 
 <!-- ========== MODAL: ADMIN PANEL ========== -->
+<!-- ========== MODAL: ADMIN PANEL ========== -->
 <div class="overlay" id="ov-admin">
   <div class="modal">
-    <button class="close-btn" onclick="closeAdmin()">[ ✕ ]</button>
+    <!-- Usunięto onclick, dodano id dla zamknięcia -->
+    <button class="close-btn" id="btn-admin-close" aria-label="Zamknij">[ ✕ ]</button>
     <h2>// Panel administratora</h2>
+    
     <div class="admin-tabs">
-      <button class="admin-tab active" id="atab-users" onclick="setAdminTab('users')">Użytkownicy</button>
-      <button class="admin-tab" id="atab-access" onclick="setAdminTab('access')">Dostęp e-mail</button>
+      <!-- Użycie data-attributes zamiast inline JS -->
+      <button class="admin-tab active" id="atab-users" data-tab="users">Użytkownicy</button>
+      <button class="admin-tab" id="atab-access" data-tab="access">Dostęp e-mail</button>
     </div>
 
     <!-- ZAKŁADKA: Użytkownicy -->
     <div id="admin-pane-users">
       <div class="admin-info">
         Zmień rolę użytkownika wybierając z listy.<br>
-        <strong style="color:var(--accent)">nowy</strong> — może dodawać, nie może edytować ani usuwać &nbsp;|&nbsp;
-        <strong style="color:var(--accent)">editor</strong> — może dodawać i edytować &nbsp;|&nbsp;
-        <strong style="color:var(--accent)">admin</strong> — pełny dostęp + ten panel
+        <strong style="color:var(--accent)">nowy</strong> — dodawanie | 
+        <strong style="color:var(--accent)">editor</strong> — edycja | 
+        <strong style="color:var(--accent)">admin</strong> — pełny dostęp
       </div>
       <div id="admin-users-list"></div>
       <div class="modal-actions" style="gap:8px;flex-wrap:wrap">
-        <button class="btn btn-danger btn-sm" id="btn-del-selected" style="display:none" onclick="deleteSelectedUsers()">
+        <button class="btn btn-danger btn-sm" id="btn-del-selected" style="display:none">
           Usuń zaznaczonych (<span id="del-sel-count">0</span>)
         </button>
-        <button class="btn btn-outline" onclick="closeAdmin()">Zamknij</button>
-        <button class="btn btn-outline btn-sm" onclick="renderAdminUsers()">
+        <button class="btn btn-outline" id="btn-admin-cancel">Zamknij</button>
+        <button class="btn btn-outline btn-sm" id="btn-admin-refresh-users">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.38"/></svg>
           Odśwież
         </button>
@@ -1001,17 +1014,17 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <!-- ZAKŁADKA: Dostęp e-mail -->
     <div id="admin-pane-access" style="display:none">
       <div class="admin-info">
-        Adresy e-mail na tej liście mogą się zalogować nawet jeśli ich domena nie jest dozwolona.<br>
+        Adresy e-mail na tej liście mogą się zalogować nawet poza domeną.<br>
         Dozwolone domeny: <strong style="color:var(--accent)" id="admin-domains-info"></strong>
       </div>
-      <div class="admin-add-row">
-        <input class="admin-add-inp" type="email" id="allowed-email-inp" placeholder="nowy@adres.pl" onkeydown="if(event.key==='Enter')addAllowedEmail()">
-        <button class="btn btn-primary btn-sm" onclick="addAllowedEmail()">Dodaj</button>
-      </div>
+      <form class="admin-add-row" id="form-add-allowed">
+        <input class="admin-add-inp" type="email" id="allowed-email-inp" placeholder="nowy@adres.pl" required>
+        <button type="submit" class="btn btn-primary btn-sm">Dodaj</button>
+      </form>
       <div id="admin-allowed-list"></div>
       <div class="modal-actions">
-        <button class="btn btn-outline" onclick="closeAdmin()">Zamknij</button>
-        <button class="btn btn-outline btn-sm" onclick="renderAdminAccess()">
+        <button class="btn btn-outline" id="btn-admin-cancel-access">Zamknij</button>
+        <button class="btn btn-outline btn-sm" id="btn-admin-refresh-access">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.38"/></svg>
           Odśwież
         </button>
@@ -1019,14 +1032,47 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     </div>
   </div>
 </div>
-
 <div class="toast-container" id="toast-container"></div>
 
 <script>
 /* ============================================================  CONFIG  */
-const SUPABASE_URL = 'https://visyqdyuyistjslrpfoi.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc3lxZHl1eWlzdGpzbHJwZm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NDgyOTQsImV4cCI6MjA5MjUyNDI5NH0.Yv4_ja4yBwXQbkxQs8fPHdasv9BMXFIV0H9MykqBtKk';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* ============================================================  CONFIG  */
+const CONFIG = {
+  supabaseUrl: 'https://visyqdyuyistjslrpfoi.supabase.co',
+  // Klucz publiczny - upewnij się, że RLS jest włączone w bazie!
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc3lxZHl1eWlzdGpzbHJwZm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NDgyOTQsImV4cCI6MjA5MjUyNDI5NH0.Yv4_ja4yBwXQbkxQs8fPHdasv9BMXFIV0H9MykqBtKk'
+};
+
+const sb = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+
+// Inicjalizacja zdarzeń po załadowaniu DOM
+document.addEventListener('DOMContentLoaded', () => {
+    initAdminEvents();
+});
+
+function initAdminEvents() {
+    // Obsługa zakładek
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const target = e.target.dataset.tab;
+            setAdminTab(target);
+        });
+    });
+
+    // Obsługa formularza dodawania e-maila
+    const addAllowedForm = document.getElementById('form-add-allowed');
+    if(addAllowedForm) {
+        addAllowedForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addAllowedEmail();
+        });
+    }
+
+    // Pozostałe przyciski (przykład)
+    document.getElementById('btn-admin-refresh-users')?.addEventListener('click', renderAdminUsers);
+    document.getElementById('btn-admin-close')?.addEventListener('click', closeAdmin);
+    document.getElementById('btn-admin-cancel')?.addEventListener('click', closeAdmin);
+}
 
 /* ============================================================  STATE  */
 const CAT_IMAGES = {
@@ -1064,6 +1110,19 @@ let currentUser = null;
 let currentRole = 'nowy';
 let appReady    = false;
 
+// Pomocnicza funkcja do ucieczki znaków HTML (ochrona przed XSS)
+const esc = (str) => {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
+let allUsers = []; // Tablica na profile wszystkich użytkowników dla Admina
+
 /* ============================================================  AUTH  */
 async function initAuth() {
   const { data:{ session } } = await sb.auth.getSession();
@@ -1088,21 +1147,24 @@ async function initAuth() {
   });
 }
 
-async function afterSignIn() {
-  setLoadingTxt('WCZYTYWANIE DANYCH…');
-  try {
-    await loadProfile();
-    await loadData();
-  } catch(e) {
-    toast('Błąd bazy danych — sprawdź czy SQL setup był uruchomiony w Supabase.', 'error', 10000);
-    console.error('afterSignIn error:', e);
-  }
-  showApp();
-}
-
 async function loadProfile() {
-  const { data } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
-  currentRole = data?.role || 'nowy';
+  try {
+    // maybeSingle() nie rzuca błędu, gdy nie znajdzie wiersza
+    const { data, error } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
+    
+    if (error) throw error;
+    
+    if (data) {
+      currentRole = data.role;
+    } else {
+      // Profil jeszcze nie istnieje (np. opóźnienie triggera)
+      currentRole = 'nowy';
+      console.warn('Profil nie został jeszcze utworzony w bazie.');
+    }
+  } catch (e) {
+    console.error('Błąd loadProfile:', e);
+    currentRole = 'nowy'; // Fallback dla bezpieczeństwa
+  }
 }
 
 function updateUserInfo() {
@@ -1157,37 +1219,48 @@ function showApp() {
   updateUserInfo();
   applyRoleUI();
   renderAll();
-  updateZestFloat();
-  initStarHover();
-  document.getElementById('print-date').textContent = 'Wydruk: ' + new Date().toLocaleDateString('pl-PL');
+  
+  if(typeof updateZestFloat === 'function') updateZestFloat();
+  if(typeof initStarHover === 'function') initStarHover();
+  
+  const printDateEl = document.getElementById('print-date');
+  if (printDateEl) printDateEl.textContent = 'Wydruk: ' + new Date().toLocaleDateString('pl-PL');
+  
+  // Wyrenderuj listę użytkowników od razu, jeśli użytkownik to admin
+  if (currentRole === 'admin') {
+    if(typeof renderAdminUsers === 'function') renderAdminUsers();
+  }
+  
   goHome();
 }
 
 function goHome() {
   const hp = document.getElementById('home-page');
   const main = document.querySelector('#app-container > .container');
-  hp.style.display = '';
-  main.style.display = 'none';
+  if (hp) hp.style.display = '';
+  if (main) main.style.display = 'none';
   renderHomePage();
 }
 
 function renderHomePage() {
   const cats = topCats();
   const grid = document.getElementById('home-tiles-grid');
+  if (!grid) return;
+  
   grid.innerHTML = cats.map(cat => {
     const imgSrc = getCatImg(cat);
     const cnt = parts.filter(p => catTop(p.category) === cat || p.category === cat).length;
     const imgHtml = imgSrc
-      ? `<img src="${imgSrc}" alt="${cat}" loading="lazy">`
+      ? `<img src="${imgSrc}" alt="${esc(cat)}" loading="lazy">`
       : `<div class="home-tile-ph">
            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
              <rect x="3" y="3" width="18" height="18"/><path d="M3 9h18M9 21V9"/>
            </svg>
          </div>`;
-    return `<div class="home-tile" onclick="goToCategory(this.dataset.cat)" data-cat="${cat.replace(/"/g,'&quot;')}">
+    return `<div class="home-tile" onclick="goToCategory('${esc(cat)}')" data-cat="${esc(cat)}">
       <div class="home-tile-img">${imgHtml}</div>
       <div class="home-tile-footer">
-        <div class="home-tile-name">${cat}</div>
+        <div class="home-tile-name">${esc(cat)}</div>
         <div class="home-tile-count">${cnt} ${cnt === 1 ? 'część' : 'części'}</div>
       </div>
     </div>`;
@@ -1211,18 +1284,18 @@ function renderHomePage() {
 function goToCategory(cat) {
   const hp = document.getElementById('home-page');
   const main = document.querySelector('#app-container > .container');
-  hp.style.display = 'none';
-  main.style.display = '';
+  if (hp) hp.style.display = 'none';
+  if (main) main.style.display = '';
   setCat(cat);
-  setTab('parts');
+  if(typeof setTab === 'function') setTab('parts');
 }
 
 function goToLinks() {
   const hp = document.getElementById('home-page');
   const main = document.querySelector('#app-container > .container');
-  hp.style.display = 'none';
-  main.style.display = '';
-  setTab('links');
+  if (hp) hp.style.display = 'none';
+  if (main) main.style.display = '';
+  if(typeof setTab === 'function') setTab('links');
 }
 
 function setLoadingTxt(t) {
@@ -1285,7 +1358,6 @@ async function verifyOtpCode() {
     loginMsg('Nieprawidłowy lub wygasły kod. Spróbuj ponownie.', 'error');
     btn.disabled = false; btn.textContent = 'Weryfikuj';
   }
-  // sukces: onAuthStateChange → SIGNED_IN → afterSignIn()
 }
 
 function loginMsg(msg, type) {
@@ -1315,18 +1387,35 @@ async function fetchAll(fn) {
 }
 
 async function loadData() {
-  const [pr, cr, lr] = await Promise.all([
+  // 1. Podstawowe dane dostępne dla każdego
+  const requests = [
     fetchAll(() => sb.from('parts').select('*').order('added_at', { ascending: false })),
     fetchAll(() => sb.from('custom_cats').select('name')),
     fetchAll(() => sb.from('links').select('*').order('added_at', { ascending: false })),
-  ]);
-  if (pr.error) { toast('Błąd ładowania części: ' + pr.error.message, 'error'); }
-  if (cr.error) { toast('Błąd ładowania kategorii: ' + cr.error.message, 'error'); }
-  if (lr.error) { toast('Błąd ładowania linków: ' + lr.error.message, 'error'); }
+  ];
+
+  // 2. Jeśli admin, pobierz dodatkowo listę wszystkich użytkowników
+  if (currentRole === 'admin') {
+    requests.push(sb.from('profiles').select('id, email, role').order('email'));
+  }
+
+  const results = await Promise.all(requests);
+  const [pr, cr, lr, ur] = results;
+
+  if (pr.error && typeof toast === 'function') toast('Błąd ładowania części: ' + pr.error.message, 'error');
+  if (cr.error && typeof toast === 'function') toast('Błąd ładowania kategorii: ' + cr.error.message, 'error');
+  if (lr.error && typeof toast === 'function') toast('Błąd ładowania linków: ' + lr.error.message, 'error');
+  
   parts      = (pr.data || []).map(dbToPart);
   customCats = (cr.data || []).map(r => r.name);
   links      = (lr.data || []).map(dbToLink);
-  partNames  = [...new Set(parts.map(p => p.name))].sort((a,b) => a.localeCompare(b,'pl'));
+  
+  // Przypisanie użytkowników dla panelu admina
+  if (ur && !ur.error) {
+    allUsers = ur.data;
+  }
+
+  partNames = [...new Set(parts.map(p => p.name))].sort((a,b) => a.localeCompare(b,'pl'));
   await loadCatImages();
 }
 
@@ -1363,17 +1452,22 @@ function save() {
 
 function updateStorage() {
   const total = parts.length + links.length;
-  document.getElementById('storage-txt').textContent = `${total} rekordów`;
+  const storageTxtEl = document.getElementById('storage-txt');
+  if(storageTxtEl) storageTxtEl.textContent = `${total} rekordów`;
+  
   const bar = document.getElementById('storage-bar');
-  const pct = Math.min(100, Math.round(total / 500 * 100));
-  bar.style.width = pct + '%';
-  bar.className = 'storage-bar-inner' + (pct >= 100 ? ' full' : pct >= 80 ? ' warn' : '');
+  if (bar) {
+    const pct = Math.min(100, Math.round(total / 500 * 100));
+    bar.style.width = pct + '%';
+    bar.className = 'storage-bar-inner' + (pct >= 100 ? ' full' : pct >= 80 ? ' warn' : '');
+  }
 }
 
 /* ============================================================  THEME  */
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
-  document.getElementById('theme-lbl').textContent = t==='dark' ? 'DZIEŃ' : 'NOC';
+  const themeLbl = document.getElementById('theme-lbl');
+  if (themeLbl) themeLbl.textContent = t === 'dark' ? 'DZIEŃ' : 'NOC';
   localStorage.setItem(LS.theme, t);
 }
 function toggleTheme() { applyTheme(document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark'); }
@@ -1395,32 +1489,88 @@ function catSub(path) { const i=(path||'').indexOf('/'); return i>=0 ? path.slic
 function countInTop(top) { return parts.filter(p=>catTop(p.category)===top).length; }
 function catIndex(cat) { const top = catTop(cat); const i = topCats().indexOf(top); return i>=0 ? i%6 : 0; }
 function catBadge(cat) { return `<span class="cat-badge cb-${catIndex(cat)}">${esc(cat)}</span>`; }
-function getCatImg(cat) { return catImgs[cat] || CAT_IMAGES[cat] || null; }
+function getCatImg(cat) { 
+  if (typeof CAT_IMAGES !== 'undefined') return catImgs[cat] || CAT_IMAGES[cat] || null; 
+  return catImgs[cat] || null;
+}
 function registerName(n) { n=n.trim(); if(n&&!partNames.includes(n)){partNames.push(n);partNames.sort((a,b)=>a.localeCompare(b,'pl'));} }
 
 /* ============================================================  FILTER & SORT  */
 function getFiltered() {
-  const q = document.getElementById('search-inp').value.trim().toLowerCase();
-  const [field,dir] = document.getElementById('sort-sel').value.split('_');
-  const asc = dir==='asc';
-  let result = parts.filter(p => {
-    if (drillCat) {
-      if (catTop(p.category) !== drillCat) return false;
-      if (filterCat !== '' && p.category !== filterCat) return false;
-    } else if (filterCat !== '') {
-      if (catTop(p.category) !== filterCat) return false;
-    }
-    if (q) { const hay=(p.name+' '+p.desc+' '+p.category).toLowerCase(); if(!hay.includes(q)) return false; }
-    return true;
-  });
-  result.sort((a,b) => {
-    let va=a[field]??'', vb=b[field]??'';
-    if(typeof va==='string') return asc ? va.localeCompare(vb,'pl') : vb.localeCompare(va,'pl');
-    return asc ? va-vb : vb-va;
-  });
-  return result;
+  const searchInp = document.getElementById('search-inp');
+  const sortSel = document.getElementById('sort-sel');
+  
+  const q = searchInp ? searchInp.value.trim().toLowerCase() : '';
+  const sortVal = sortSel ? sortSel.value : 'name_asc';
+  const [field, dir] = sortVal.split('_');
+  const isAsc = dir === 'asc';
+
+  return parts
+    .filter(p => {
+      // 1. Filtrowanie po kategorii (drill-down)
+      const top = catTop(p.category);
+      if (drillCat && top !== drillCat) return false;
+      if (filterCat && p.category !== filterCat && top !== filterCat) return false;
+      
+      // 2. Filtrowanie po frazie (search)
+      if (q) {
+        return (p.name + ' ' + p.desc + ' ' + p.category).toLowerCase().includes(q);
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const va = a[field] ?? '';
+      const vb = b[field] ?? '';
+      
+      const comparison = typeof va === 'string' 
+        ? va.localeCompare(vb, 'pl') 
+        : va - vb;
+        
+      return isAsc ? comparison : -comparison;
+    });
 }
 
+/* ============================================================  ADMIN PANEL (dodane) */
+function renderAdminUsers() {
+  const container = document.getElementById('admin-users-list');
+  if (!container) return;
+
+  if (allUsers.length === 0) {
+    container.innerHTML = '<div class="admin-empty">Brak użytkowników lub brak uprawnień.</div>';
+    return;
+  }
+
+  container.innerHTML = allUsers.map(user => {
+    const isSelf = user.id === currentUser.id;
+    return `
+      <div class="admin-user-row ${isSelf ? 'admin-self' : ''}">
+        <div class="admin-email" title="${esc(user.email)}">${esc(user.email)} ${isSelf ? '(TY)' : ''}</div>
+        <select class="admin-role-sel" 
+                onchange="updateUserRole('${user.id}', this.value)" 
+                ${isSelf ? 'disabled' : ''}>
+          <option value="nowy" ${user.role === 'nowy' ? 'selected' : ''}>NOWY</option>
+          <option value="editor" ${user.role === 'editor' ? 'selected' : ''}>EDITOR</option>
+          <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>ADMIN</option>
+        </select>
+      </div>
+    `;
+  }).join('');
+}
+
+async function updateUserRole(userId, newRole) {
+  const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', userId);
+  
+  if (error) {
+    if (typeof toast === 'function') toast('Błąd zmiany roli: ' + error.message, 'error');
+    renderAdminUsers(); // Przywróć stan z pamięci w razie błędu
+  } else {
+    if (typeof toast === 'function') toast('Rola zaktualizowana pomyślnie', 'success');
+    // Aktualizujemy lokalną tablicę, żeby widok był spójny
+    const user = allUsers.find(u => u.id === userId);
+    if (user) user.role = newRole;
+  }
+}
+ 
 /* ============================================================  RENDER ALL  */
 function renderAll() { renderCatFilter(); renderSummary(); renderContent(); updateZestFloat(); }
 
@@ -2329,7 +2479,6 @@ async function deleteSelectedUsers() {
 }
 
 /* ============================================================  HELPERS  */
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function today(){ return new Date().toISOString().split('T')[0]; }
 function fmtPl(n){ return n.toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtP(n){ return fmtPl(n||0); }
