@@ -6,8 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="logo.png">
 <title>Katalog</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1" integrity="sha384-sfbOag7cEcqn2DK53T/iBNAH/2cMCf7bSzJDwBhV117A0z/NIj9Usei1jKIBY1Ae" crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 /* ---- LIGHT (default) ---- */
@@ -268,6 +268,15 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
   box-shadow:0 4px 20px var(--accent-dim);transition:all .2s;}
 .zest-float:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--accent-dim);}
 .zest-badge{background:oklch(0% 0 0 / .25);border-radius:10px;padding:1px 8px;font-size:.72rem;min-width:24px;text-align:center;}
+.del-float{position:fixed;bottom:28px;left:160px;z-index:200;display:none;align-items:center;gap:10px;background:var(--danger);color:var(--surface);border:none;cursor:pointer;padding:12px 20px;font-family:'Orbitron',sans-serif;font-size:.76rem;font-weight:700;letter-spacing:.1em;box-shadow:0 4px 20px var(--danger-dim);transition:all .2s;}
+.del-float:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--danger-dim);}
+.card-del-chk{position:absolute;top:8px;left:8px;z-index:2;width:18px;height:18px;cursor:pointer;accent-color:var(--danger);}
+.multidel-item{font-family:var(--mono);font-size:.75rem;color:var(--text-dim);padding:6px 10px;background:var(--surface2);border:1px solid var(--border);}
+.dup-group{margin-bottom:14px;}
+.dup-group-label{font-family:var(--mono);font-size:.68rem;color:var(--primary);letter-spacing:.08em;margin-bottom:6px;}
+.dup-row{display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);margin-bottom:4px;}
+.dup-info{font-family:var(--mono);font-size:.72rem;color:var(--text-dim);}
+.dup-name{font-family:var(--mono);font-size:.72rem;color:var(--text);}
 
 /* MODAL */
 .overlay{display:none;position:fixed;inset:0;background:var(--overlay-bg);z-index:100;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);padding:20px;overflow-y:auto;}
@@ -498,6 +507,17 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 .home-tile-links:hover{border-style:solid;}
 .home-tile-links .home-tile-ph svg{opacity:.55;stroke:var(--primary);}
 .home-tile-links .home-tile-name{color:var(--primary);}
+.ai-table{width:100%;border-collapse:collapse;font-size:.8rem;}
+.ai-table th{background:var(--surface2);padding:6px 8px;font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted-lt);border:1px solid var(--border-bright);white-space:nowrap;}
+.ai-table td{padding:4px 6px;border:1px solid var(--border);vertical-align:middle;}
+.ai-table td input{width:100%;padding:4px 6px;border:none;background:transparent;color:var(--text);font-family:'Inter',sans-serif;font-size:.82rem;outline:none;}
+.ai-table td input:focus{background:var(--surface3);outline:1px solid var(--primary);}
+.ai-table tr:hover td{background:var(--primary-dim);}
+.ai-table .td-del{width:28px;text-align:center;}
+.ai-table .td-del button{background:none;border:none;cursor:pointer;color:var(--muted-lt);font-size:.9rem;padding:2px 4px;transition:color .15s;}
+.ai-table .td-del button:hover{color:var(--danger);}
+.ai-spin{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+.ai-status{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.72rem;color:var(--muted-lt);padding:20px;justify-content:center;}
 </style>
 </head>
 <body>
@@ -584,6 +604,14 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Eksport XLSX
     </button>
+    <button class="btn btn-outline btn-sm" id="btn-ai-import" onclick="openAiImport()" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/></svg>
+      Import AI
+    </button>
+    <button class="btn btn-outline btn-sm" id="btn-duplicates" onclick="openDuplicates()" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="0"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Duplikaty
+    </button>
     <div class="toolbar-sep"></div>
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -646,6 +674,12 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 <button class="zest-float" id="zest-float" onclick="openZest()">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
   Zestawienie <span class="zest-badge" id="zest-count">0</span>
+</button>
+
+<!-- FLOATING DELETE BUTTON (admin) -->
+<button class="del-float" id="del-float" onclick="openMultiDel()">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+  Usuń zaznaczone <span class="zest-badge" id="del-float-count">0</span>
 </button>
 
 <!-- ========== MODAL: ADD / EDIT ========== -->
@@ -737,6 +771,102 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeDel()">Anuluj</button>
       <button class="btn btn-danger" onclick="confirmDel()">Usuń</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: MULTI DELETE ========== -->
+<div class="overlay" id="ov-multidel">
+  <div class="modal modal-sm">
+    <button class="close-btn" onclick="closeMultiDel()">[ ✕ ]</button>
+    <h2>// Usunąć zaznaczone?</h2>
+    <div id="multidel-list" style="max-height:260px;overflow-y:auto;margin-bottom:16px;display:flex;flex-direction:column;gap:4px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeMultiDel()">Anuluj</button>
+      <button class="btn btn-danger" onclick="confirmMultiDel()">Usuń wszystkie</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: DUPLIKATY ========== -->
+<div class="overlay" id="ov-dup">
+  <div class="modal modal-sm">
+    <button class="close-btn" onclick="closeDuplicates()">[ ✕ ]</button>
+    <h2>// Duplikaty</h2>
+    <div class="modal-note" style="margin-bottom:14px">Zaznacz <strong>które egzemplarze usunąć</strong> — zostaw przynajmniej jeden z każdej grupy.</div>
+    <div id="dup-list" style="max-height:380px;overflow-y:auto;margin-bottom:16px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeDuplicates()">Zamknij</button>
+      <button class="btn btn-danger" onclick="confirmDelDuplicates()">Usuń zaznaczone</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: AI IMPORT ========== -->
+<div class="overlay" id="ov-ai-import">
+  <div class="modal modal-lg">
+    <button class="close-btn" onclick="closeAiImport()">[ ✕ ]</button>
+    <h2>// Import z AI — faktura / cennik</h2>
+    <div class="fg">
+      <div class="import-drop" id="ai-drop"
+           onclick="document.getElementById('ai-file').click()"
+           ondragover="event.preventDefault()"
+           ondrop="handleAiDrop(event)">
+        <input type="file" id="ai-file" accept=".pdf,image/*" onchange="handleAiFile(this.files[0])">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;color:var(--muted-lt)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="15" r="3"/></svg>
+        <div class="import-drop-text">Kliknij lub przeciągnij <strong style="color:var(--primary)">PDF lub zdjęcie</strong><br><small>JPG, PNG, WEBP, PDF — max 10 MB</small></div>
+      </div>
+      <div id="ai-file-info" style="display:none;font-family:var(--mono);font-size:.68rem;color:var(--muted-lt)"></div>
+
+      <div id="ai-cat-row" style="display:none">
+        <div class="fg2">
+          <div>
+            <label>Kategoria docelowa</label>
+            <select id="ai-cat" onchange="updateAiSubcat()"></select>
+          </div>
+          <div id="ai-subcat-wrap" style="display:none">
+            <label>Podkategoria</label>
+            <select id="ai-subcat"></select>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:12px;justify-content:flex-start">
+          <button class="btn btn-primary btn-sm" id="ai-extract-btn" onclick="extractWithAI()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Analizuj z AI
+          </button>
+        </div>
+      </div>
+
+      <div id="ai-status" style="display:none" class="ai-status">
+        <div class="ai-spin"></div>
+        <span id="ai-status-txt">Analizuję dokument…</span>
+      </div>
+
+      <div id="ai-result-wrap" style="display:none">
+        <div class="sys-header"><span class="tag">WYNIK EKSTRAKCJI</span><div class="line"></div></div>
+        <div style="overflow-x:auto;max-height:380px;overflow-y:auto;margin-bottom:8px">
+          <table class="ai-table" id="ai-table">
+            <thead><tr>
+              <th style="width:34%">Nazwa</th>
+              <th style="width:12%">Netto PLN</th>
+              <th style="width:12%">Brutto PLN</th>
+              <th>Opis / kat.</th>
+              <th class="td-del"></th>
+            </tr></thead>
+            <tbody id="ai-tbody"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-outline btn-xs" onclick="aiAddRow()" style="margin-bottom:4px">+ dodaj wiersz</button>
+        <div class="imp-row-count" id="ai-row-count"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeAiImport()">Anuluj</button>
+      <button class="btn btn-primary" id="ai-import-btn" onclick="doAiImport()" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Importuj do katalogu
+      </button>
     </div>
   </div>
 </div>
@@ -847,9 +977,13 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
           </div>
         </div>
 
-        <div class="mapping-row" style="margin-bottom:14px">
+        <div class="mapping-row" style="margin-bottom:8px">
           <label>Przypisz importowane części do kategorii</label>
-          <select id="imp-cat"></select>
+          <select id="imp-cat" onchange="updateImportSubcat()"></select>
+        </div>
+        <div id="imp-subcat-row" class="mapping-row" style="display:none;margin-bottom:14px">
+          <label>Podkategoria</label>
+          <select id="imp-subcat"></select>
         </div>
 
         <div style="font-family:var(--mono);font-size:.65rem;color:var(--muted-lt);margin-bottom:8px;letter-spacing:.1em">MAPOWANIE KOLUMN — wybierz które kolumny odpowiadają polom:</div>
@@ -1055,6 +1189,7 @@ let zestawienie = [];
 let importWb    = null;
 let editId              = null;
 let delId               = null;
+let deleteSelection     = [];
 let pendingPhotoDataUrl = null;
 let pendingPhotoOrig    = null;
 let pendingPhotoFile    = null;
@@ -1127,6 +1262,8 @@ function applyRoleUI() {
   const btnExp    = document.getElementById('btn-export');
   const btnExpLnk = document.getElementById('btn-export-links');
   const btnSync   = document.getElementById('btn-sync');
+  const btnDup    = document.getElementById('btn-duplicates');
+  const btnAiImp  = document.getElementById('btn-ai-import');
   if (btnAdd)    btnAdd.style.display    = canAdd  ? '' : 'none';
   if (btnLnk)    btnLnk.style.display    = canAdd  ? '' : 'none';
   if (btnImp)    btnImp.style.display    = isAdmin ? '' : 'none';
@@ -1134,6 +1271,8 @@ function applyRoleUI() {
   if (btnExp)    btnExp.style.display    = isAdmin ? '' : 'none';
   if (btnExpLnk) btnExpLnk.style.display = isAdmin ? '' : 'none';
   if (btnSync)   btnSync.style.display   = isAdmin ? '' : 'none';
+  if (btnDup)    btnDup.style.display    = isAdmin ? '' : 'none';
+  if (btnAiImp)  btnAiImp.style.display  = isAdmin ? '' : 'none';
 }
 
 function showLogin() {
@@ -1498,8 +1637,11 @@ function renderGrid(arr) {
     const photo = p.photo
       ? `<img src="${esc(p.photo)}" alt="${esc(p.name)}">`
       : `<div class="card-photo-ph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Brak zdjęcia</span></div>`;
+    const delChk = canDelete
+      ? `<input type="checkbox" class="card-del-chk" data-del-id="${p.id}" ${deleteSelection.includes(p.id)?'checked':''} onchange="toggleDeleteSelect(${p.id})" onclick="event.stopPropagation()">`
+      : '';
     return `<div class="part-card${sel?' selected':''}">
-      <div class="card-photo">${photo}</div>
+      <div class="card-photo">${photo}${delChk}</div>
       <div class="card-body">
         <div class="card-cat">${catBadge(p.category)}</div>
         <div class="card-name">${esc(p.name)}</div>
@@ -1534,6 +1676,7 @@ function renderTable(arr) {
       ? `<img class="thumb" src="${esc(p.photo)}" alt="">`
       : `<div class="thumb-ph"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
     return `<tr class="${sel?'tr-selected':''}">
+      ${canDelete ? `<td class="chk-col"><input type="checkbox" data-del-id="${p.id}" ${deleteSelection.includes(p.id)?'checked':''} onchange="toggleDeleteSelect(${p.id})" style="accent-color:var(--danger)"></td>` : ''}
       <td class="chk-col"><input type="checkbox" ${sel?'checked':''} onchange="toggleSelect(${p.id})"></td>
       <td>${thumb}</td>
       <td class="col-cat no-print">${catBadge(p.category)}</td>
@@ -1549,6 +1692,7 @@ function renderTable(arr) {
   }).join('');
   return `<div class="table-wrap"><table>
     <thead><tr>
+      ${canDelete ? '<th class="chk-col nosort" title="Usuń"></th>' : ''}
       <th class="chk-col nosort"></th>
       <th class="nosort"></th>
       <th onclick="sortBy('category')" id="th-category" class="no-print">Kategoria <span class="si">↕</span></th>
@@ -2122,7 +2266,20 @@ function openImport() {
   document.getElementById('imp-mapping').classList.remove('visible');
   document.getElementById('imp-btn').style.display='none';
   document.getElementById('imp-cat').innerHTML=topCats().map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  document.getElementById('imp-subcat-row').style.display='none';
+  document.getElementById('imp-subcat').innerHTML='';
   document.getElementById('ov-import').classList.add('open');
+}
+function updateImportSubcat() {
+  if(currentRole!=='admin') return;
+  const top=document.getElementById('imp-cat').value;
+  const subs=subCatsOf(top);
+  const row=document.getElementById('imp-subcat-row');
+  if(!subs.length){row.style.display='none';return;}
+  row.style.display='';
+  document.getElementById('imp-subcat').innerHTML=
+    `<option value="">(brak — przypisz do kategorii głównej)</option>`+
+    subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
 }
 function closeImport() { document.getElementById('ov-import').classList.remove('open'); }
 
@@ -2191,7 +2348,9 @@ async function doImport() {
   const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
   const dataRows=data.slice(hrow+1).filter(r=>r.some(c=>c!==''&&c!=null));
 
-  const selectedCat=document.getElementById('imp-cat').value||DEFAULT_CATS[0];
+  const topCat=document.getElementById('imp-cat').value||DEFAULT_CATS[0];
+  const subCat=currentRole==='admin'?document.getElementById('imp-subcat').value:'';
+  const selectedCat=subCat?`${topCat}/${subCat}`:topCat;
   const colIdx={
     name:     document.getElementById('map-name').value,
     priceNet: document.getElementById('map-net').value,
@@ -2326,6 +2485,255 @@ async function deleteSelectedUsers() {
   if (error) { toast('Błąd usuwania: ' + error.message, 'error'); return; }
   toast(`Usunięto ${ids.length} użytkownik(ów)`, 'success');
   await renderAdminUsers();
+}
+
+/* ============================================================  AI IMPORT  */
+let aiFile = null;
+
+function openAiImport() {
+  aiFile = null;
+  document.getElementById('ai-file').value = '';
+  document.getElementById('ai-file-info').style.display = 'none';
+  document.getElementById('ai-cat-row').style.display = 'none';
+  document.getElementById('ai-status').style.display = 'none';
+  document.getElementById('ai-result-wrap').style.display = 'none';
+  document.getElementById('ai-import-btn').style.display = 'none';
+  document.getElementById('ai-cat').innerHTML = topCats().map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  document.getElementById('ai-subcat-wrap').style.display = 'none';
+  document.getElementById('ai-subcat').innerHTML = '';
+  document.getElementById('ov-ai-import').classList.add('open');
+}
+
+function closeAiImport() {
+  document.getElementById('ov-ai-import').classList.remove('open');
+}
+
+function handleAiDrop(ev) {
+  ev.preventDefault();
+  const f = ev.dataTransfer.files[0];
+  if (f) handleAiFile(f);
+}
+
+function handleAiFile(file) {
+  if (!file) return;
+  const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  if (!allowed.includes(file.type)) { toast('Dozwolone formaty: PDF, JPG, PNG, WEBP', 'error'); return; }
+  if (file.size > 10 * 1024 * 1024) { toast('Plik za duży — max 10 MB', 'error'); return; }
+  aiFile = file;
+  const info = document.getElementById('ai-file-info');
+  info.textContent = `${file.name} — ${(file.size / 1024).toFixed(0)} KB`;
+  info.style.display = '';
+  document.getElementById('ai-cat-row').style.display = '';
+  document.getElementById('ai-result-wrap').style.display = 'none';
+  document.getElementById('ai-import-btn').style.display = 'none';
+}
+
+function updateAiSubcat() {
+  const top = document.getElementById('ai-cat').value;
+  const subs = subCatsOf(top);
+  const wrap = document.getElementById('ai-subcat-wrap');
+  if (!subs.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  document.getElementById('ai-subcat').innerHTML =
+    `<option value="">(kategoria główna)</option>` +
+    subs.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+
+async function extractWithAI() {
+  if (!aiFile) return;
+  const btn = document.getElementById('ai-extract-btn');
+  btn.disabled = true;
+  document.getElementById('ai-status').style.display = 'flex';
+  document.getElementById('ai-status-txt').textContent = 'Analizuję dokument…';
+  document.getElementById('ai-result-wrap').style.display = 'none';
+  document.getElementById('ai-import-btn').style.display = 'none';
+
+  try {
+    const base64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result.split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(aiFile);
+    });
+
+    const { data, error } = await sb.functions.invoke('extract-parts', {
+      body: { fileBase64: base64, mimeType: aiFile.type }
+    });
+
+    if (error) throw new Error(error.message);
+    if (data?.error) throw new Error(data.error);
+
+    const rows = data.parts ?? [];
+    if (!rows.length) { toast('AI nie znalazło żadnych pozycji w dokumencie', 'error'); return; }
+
+    renderAiTable(rows);
+    document.getElementById('ai-result-wrap').style.display = '';
+    document.getElementById('ai-import-btn').style.display = 'inline-flex';
+    document.getElementById('ai-row-count').textContent = `Znaleziono ${rows.length} pozycji — sprawdź i popraw przed importem.`;
+
+  } catch (e) {
+    toast('Błąd ekstrakcji: ' + e.message, 'error', 6000);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('ai-status').style.display = 'none';
+  }
+}
+
+function renderAiTable(rows) {
+  document.getElementById('ai-tbody').innerHTML = rows.map((r, i) => aiRow(r, i)).join('');
+}
+
+function aiRow(r, i) {
+  return `<tr id="ai-row-${i}">
+    <td><input type="text" value="${esc(r.name ?? '')}" placeholder="Nazwa części"></td>
+    <td><input type="number" step="0.01" min="0" value="${r.priceNet != null ? r.priceNet : ''}" placeholder="0,00"></td>
+    <td><input type="number" step="0.01" min="0" value="${r.priceGross != null ? r.priceGross : ''}" placeholder="0,00"></td>
+    <td><input type="text" value="${esc(r.desc ?? '')}" placeholder="opis, kat., producent"></td>
+    <td class="td-del"><button onclick="this.closest('tr').remove()" title="Usuń wiersz">✕</button></td>
+  </tr>`;
+}
+
+let _aiRowCounter = 0;
+function aiAddRow() {
+  const tbody = document.getElementById('ai-tbody');
+  const id = 'ai-row-new-' + (++_aiRowCounter);
+  const tr = document.createElement('tr');
+  tr.id = id;
+  tr.innerHTML = `
+    <td><input type="text" placeholder="Nazwa części"></td>
+    <td><input type="number" step="0.01" min="0" placeholder="0,00"></td>
+    <td><input type="number" step="0.01" min="0" placeholder="0,00"></td>
+    <td><input type="text" placeholder="opis, kat., producent"></td>
+    <td class="td-del"><button onclick="this.closest('tr').remove()" title="Usuń wiersz">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+async function doAiImport() {
+  const topCat = document.getElementById('ai-cat').value || DEFAULT_CATS[0];
+  const subCat = document.getElementById('ai-subcat').value;
+  const category = subCat ? `${topCat}/${subCat}` : topCat;
+
+  const rows = [...document.querySelectorAll('#ai-tbody tr')];
+  const records = [];
+  for (const tr of rows) {
+    const inputs = tr.querySelectorAll('input');
+    const name = inputs[0].value.trim();
+    if (!name) continue;
+    const net = parseFloat(inputs[1].value) || null;
+    const gross = parseFloat(inputs[2].value) || null;
+    records.push({
+      category,
+      name,
+      price_net: net,
+      price_gross: gross ?? (net != null ? round2(net * (1 + VAT)) : null),
+      description: inputs[3].value.trim() || null,
+      photo: null,
+    });
+  }
+
+  if (!records.length) { toast('Brak pozycji do importu', 'error'); return; }
+
+  const btn = document.getElementById('ai-import-btn');
+  btn.disabled = true;
+  try {
+    const { data: inserted, error } = await sb.from('parts').insert(records).select();
+    if (error) { toast('Błąd importu: ' + error.message, 'error'); return; }
+    inserted.forEach(r => { registerName(r.name); parts.unshift(dbToPart(r)); });
+    renderAll();
+    closeAiImport();
+    toast(`Zaimportowano ${inserted.length} część(ci) z AI`, 'success', 4000);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ============================================================  MULTI-DELETE  */
+function toggleDeleteSelect(id) {
+  if(deleteSelection.includes(id)) deleteSelection=deleteSelection.filter(x=>x!==id);
+  else deleteSelection.push(id);
+  updateDelFloat();
+  document.querySelectorAll('[data-del-id]').forEach(el=>{
+    el.checked=deleteSelection.includes(+el.dataset.delId);
+  });
+}
+function updateDelFloat() {
+  const btn=document.getElementById('del-float');
+  if(!btn) return;
+  if(deleteSelection.length>0){
+    btn.style.display='inline-flex';
+    document.getElementById('del-float-count').textContent=deleteSelection.length;
+  } else {
+    btn.style.display='none';
+  }
+}
+function openMultiDel() {
+  document.getElementById('multidel-list').innerHTML=
+    deleteSelection.map(id=>{
+      const p=parts.find(x=>x.id===id);
+      return `<div class="multidel-item">${p?esc(p.category)+' — '+esc(p.name):'ID '+id}</div>`;
+    }).join('');
+  document.getElementById('ov-multidel').classList.add('open');
+}
+function closeMultiDel() { document.getElementById('ov-multidel').classList.remove('open'); }
+async function confirmMultiDel() {
+  const ids=[...deleteSelection];
+  const btn=document.querySelector('#ov-multidel .btn-danger');
+  btn.disabled=true;
+  try {
+    const {error}=await sb.from('parts').delete().in('id',ids);
+    if(error){toast('Błąd usuwania: '+error.message,'error');return;}
+    parts=parts.filter(p=>!ids.includes(p.id));
+    zestawienie=zestawienie.filter(id=>!ids.includes(id));
+    deleteSelection=[];
+    save(); closeMultiDel(); renderAll(); updateDelFloat();
+    toast(`Usunięto ${ids.length} część(ci)`,'info');
+  } finally { btn.disabled=false; }
+}
+
+/* ============================================================  DUPLIKATY  */
+function findDuplicates() {
+  const groups={};
+  parts.forEach(p=>{
+    const key=`${p.category}||${p.name.trim().toLowerCase()}`;
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(p);
+  });
+  return Object.values(groups).filter(g=>g.length>1);
+}
+function openDuplicates() {
+  const groups=findDuplicates();
+  const wrap=document.getElementById('dup-list');
+  if(!groups.length){
+    wrap.innerHTML='<div class="admin-empty">Brak duplikatów — wszystkie nazwy w danej kategorii są unikalne.</div>';
+  } else {
+    wrap.innerHTML=groups.map(g=>`
+      <div class="dup-group">
+        <div class="dup-group-label">${esc(g[0].category)} — ${esc(g[0].name.trim())} (${g.length}×)</div>
+        ${g.map(p=>`
+          <div class="dup-row">
+            <input type="checkbox" class="dup-chk" data-dup-id="${p.id}">
+            <span class="dup-name">${esc(p.name)}</span>
+            <span class="dup-info">${p.priceNet!=null?fmtPl(p.priceNet)+' zł netto':'—'} | ${p.addedAt?p.addedAt.slice(0,10):'?'}</span>
+          </div>`).join('')}
+      </div>`).join('');
+  }
+  document.getElementById('ov-dup').classList.add('open');
+}
+function closeDuplicates() { document.getElementById('ov-dup').classList.remove('open'); }
+async function confirmDelDuplicates() {
+  const ids=[...document.querySelectorAll('.dup-chk:checked')].map(el=>+el.dataset.dupId);
+  if(!ids.length){toast('Zaznacz które duplikaty usunąć','error');return;}
+  const btn=document.querySelector('#ov-dup .btn-danger');
+  btn.disabled=true;
+  try {
+    const {error}=await sb.from('parts').delete().in('id',ids);
+    if(error){toast('Błąd: '+error.message,'error');return;}
+    parts=parts.filter(p=>!ids.includes(p.id));
+    zestawienie=zestawienie.filter(id=>!ids.includes(id));
+    deleteSelection=deleteSelection.filter(id=>!ids.includes(id));
+    save(); closeDuplicates(); renderAll(); updateDelFloat();
+    toast(`Usunięto ${ids.length} duplikat(ów)`,'info');
+  } finally { btn.disabled=false; }
 }
 
 /* ============================================================  HELPERS  */
