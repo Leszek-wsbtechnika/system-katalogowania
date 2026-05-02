@@ -852,7 +852,15 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;color:var(--muted-lt)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="15" r="3"/></svg>
         <div class="import-drop-text">Kliknij lub przeciągnij <strong style="color:var(--primary)">PDF lub zdjęcie</strong><br><small>JPG, PNG, WEBP, PDF — max 10 MB</small></div>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+        <button class="btn btn-outline btn-sm" type="button" onclick="pasteFromClipboard()" style="display:inline-flex;align-items:center;gap:7px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/></svg>
+          Wklej ze schowka
+        </button>
+        <span style="font-family:var(--mono);font-size:.6rem;color:var(--muted-lt);opacity:.7">lub Ctrl+V gdy okno jest otwarte</span>
+      </div>
       <div id="ai-file-info" style="display:none;font-family:var(--mono);font-size:.68rem;color:var(--muted-lt)"></div>
+      <img id="ai-paste-preview" style="display:none;max-width:100%;max-height:140px;object-fit:contain;border:1px solid var(--border);margin-top:4px" alt="podgląd">
 
       <div id="ai-cat-row" style="display:none">
         <div class="fg2">
@@ -2535,6 +2543,7 @@ function openAiImport() {
   aiFile = null;
   document.getElementById('ai-file').value = '';
   document.getElementById('ai-file-info').style.display = 'none';
+  document.getElementById('ai-paste-preview').style.display = 'none';
   document.getElementById('ai-cat-row').style.display = 'none';
   document.getElementById('ai-status').style.display = 'none';
   document.getElementById('ai-result-wrap').style.display = 'none';
@@ -2543,10 +2552,12 @@ function openAiImport() {
   document.getElementById('ai-subcat-wrap').style.display = 'none';
   document.getElementById('ai-subcat').innerHTML = '';
   document.getElementById('ov-ai-import').classList.add('open');
+  document.addEventListener('paste', handleAiPaste);
 }
 
 function closeAiImport() {
   document.getElementById('ov-ai-import').classList.remove('open');
+  document.removeEventListener('paste', handleAiPaste);
 }
 
 function handleAiDrop(ev) {
@@ -2562,11 +2573,50 @@ function handleAiFile(file) {
   if (file.size > 10 * 1024 * 1024) { toast('Plik za duży — max 10 MB', 'error'); return; }
   aiFile = file;
   const info = document.getElementById('ai-file-info');
-  info.textContent = `${file.name} — ${(file.size / 1024).toFixed(0)} KB`;
+  const label = file.name === 'wklejony-obraz.png' ? `Wklejono ze schowka — ${(file.size / 1024).toFixed(0)} KB` : `${file.name} — ${(file.size / 1024).toFixed(0)} KB`;
+  info.textContent = label;
   info.style.display = '';
+  const preview = document.getElementById('ai-paste-preview');
+  if (file.type.startsWith('image/')) {
+    const url = URL.createObjectURL(file);
+    preview.onload = () => URL.revokeObjectURL(url);
+    preview.src = url;
+    preview.style.display = '';
+  } else {
+    preview.style.display = 'none';
+  }
   document.getElementById('ai-cat-row').style.display = '';
   document.getElementById('ai-result-wrap').style.display = 'none';
   document.getElementById('ai-import-btn').style.display = 'none';
+}
+
+function handleAiPaste(ev) {
+  const items = ev.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const blob = item.getAsFile();
+      if (blob) handleAiFile(new File([blob], 'wklejony-obraz.png', { type: item.type }));
+      break;
+    }
+  }
+}
+
+async function pasteFromClipboard() {
+  try {
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      const imgType = item.types.find(t => t.startsWith('image/'));
+      if (imgType) {
+        const blob = await item.getType(imgType);
+        handleAiFile(new File([blob], 'wklejony-obraz.png', { type: imgType }));
+        return;
+      }
+    }
+    toast('Schowek nie zawiera zdjęcia — skopiuj najpierw obraz', 'error');
+  } catch (e) {
+    toast('Brak dostępu do schowka — spróbuj Ctrl+V', 'error');
+  }
 }
 
 function updateAiSubcat() {
