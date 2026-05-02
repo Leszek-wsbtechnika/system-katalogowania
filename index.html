@@ -41,6 +41,7 @@
   --c3-bg:oklch(50% 0.18 290 / .10);--c3-fg:oklch(42% 0.18 290);--c3-br:oklch(50% 0.18 290 / .28);
   --c4-bg:oklch(50% 0.20 25 / .10);--c4-fg:oklch(42% 0.20 25);--c4-br:oklch(50% 0.20 25 / .28);
   --c5-bg:oklch(58% 0.16 85 / .10);--c5-fg:oklch(44% 0.16 85);--c5-br:oklch(58% 0.16 85 / .28);
+  --brand-orange:oklch(52% 0.20 50);
 }
 /* ---- DARK ---- */
 [data-theme="dark"] {
@@ -71,22 +72,20 @@
   --c3-bg:oklch(60% 0.18 290 / .12);--c3-fg:oklch(72% 0.18 290);--c3-br:oklch(60% 0.18 290 / .35);
   --c4-bg:oklch(62% 0.20 25 / .12);--c4-fg:oklch(72% 0.20 25);--c4-br:oklch(62% 0.20 25 / .35);
   --c5-bg:oklch(68% 0.16 85 / .12);--c5-fg:oklch(76% 0.16 85);--c5-br:oklch(68% 0.16 85 / .35);
+  --brand-orange:oklch(68% 0.19 50);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s;}
 
 /* HEADER */
-header{background:var(--surface);border-bottom:1px solid var(--border-bright);transition:background .25s;}
-.header-inner{display:flex;align-items:stretch;max-width:1280px;margin:0 auto;padding:0 24px;}
-.header-hud{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:16px 22px;border-right:1px solid var(--border);min-width:72px;cursor:pointer;}
-.hud-ring{width:44px;height:44px;display:flex;align-items:center;justify-content:center;}
-.hud-ring svg{color:var(--primary);}
-@keyframes honk-ring{0%{transform:scale(1)}20%{transform:scale(1.22)}60%{transform:scale(0.94)}100%{transform:scale(1)}}
-.honking{animation:honk-ring .35s ease-out !important;}
-.header-title{padding:18px 26px;flex:1;}
-.header-title .sys-label{font-family:var(--mono);font-size:.62rem;color:var(--muted-lt);letter-spacing:.14em;margin-bottom:4px;}
-.header-title h1{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:700;color:var(--primary);letter-spacing:.06em;line-height:1.2;}
-.header-title p{font-size:.73rem;color:var(--text-dim);margin-top:4px;font-family:var(--mono);}
+header{background:var(--surface);border-bottom:1px solid var(--border-bright);border-left:3px solid var(--brand-orange);transition:background .25s;position:sticky;top:0;z-index:300;}
+.header-inner{display:flex;align-items:stretch;max-width:1280px;margin:0 auto;padding:0 24px;min-height:96px;}
+.header-brand{display:flex;flex-direction:column;justify-content:center;padding:0 26px;gap:6px;border-right:1px solid var(--border);min-width:200px;flex-shrink:0;}
+.brand-name-row{display:flex;align-items:baseline;line-height:1;}
+.brand-katalog{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:900;letter-spacing:.08em;color:var(--text);}
+.brand-system{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:900;letter-spacing:.08em;color:var(--brand-orange);}
+.brand-sub{font-family:var(--mono);font-size:.55rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;}
+.header-center{flex:1;display:flex;align-items:center;justify-content:center;padding:0 16px;}
 .header-status{display:flex;align-items:center;padding:0 18px;gap:14px;border-left:1px solid var(--border);flex-shrink:0;}
 .status-dot{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.62rem;color:var(--accent);letter-spacing:.1em;white-space:nowrap;}
 .status-dot::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--accent);animation:blink 2s ease-in-out infinite;}
@@ -500,8 +499,11 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 .home-tile-footer{padding:14px 16px 16px;display:flex;flex-direction:column;gap:4px;}
 .home-tile-name{font-family:'Orbitron',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:.08em;color:var(--text);text-transform:uppercase;}
 .home-tile-count{font-family:var(--mono);font-size:.62rem;color:var(--muted-lt);letter-spacing:.1em;}
-.btn-home{padding:5px 13px;background:transparent;border:1px solid var(--border-bright);color:var(--muted-lt);cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;transition:all .2s;display:inline-flex;align-items:center;gap:6px;text-transform:uppercase;}
-.btn-home:hover{border-color:var(--primary);color:var(--primary);}
+.btn-home{padding:6px 18px;background:transparent;border:1px solid var(--border-bright);color:var(--text-dim);cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;transition:all .2s;display:inline-flex;align-items:center;gap:7px;text-transform:uppercase;position:relative;}
+.btn-home::before{content:'';position:absolute;top:-3px;left:-3px;width:7px;height:7px;border-top:1.5px solid var(--brand-orange);border-left:1.5px solid var(--brand-orange);opacity:0;transition:opacity .2s;}
+.btn-home::after{content:'';position:absolute;bottom:-3px;right:-3px;width:7px;height:7px;border-bottom:1.5px solid var(--brand-orange);border-right:1.5px solid var(--brand-orange);opacity:0;transition:opacity .2s;}
+.btn-home:hover{border-color:var(--brand-orange);color:var(--brand-orange);}
+.btn-home:hover::before,.btn-home:hover::after{opacity:1;}
 .home-tile-links{border-style:dashed;border-color:var(--border-bright);}
 .home-tile-links .home-tile-img{background:transparent;}
 .home-tile-links:hover{border-style:solid;}
@@ -524,9 +526,17 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 
 <header>
   <div class="header-inner">
-    <div class="header-title" style="display:flex;align-items:center;padding:12px 24px;">
-    <img src="logo.png" alt="Logo Katalogu" style="width: 150px; height: auto;">
-    <!-- <img src="zdjecia/logo.svg" alt="Katalog System" style="height:52px;display:block;"> -->
+    <div class="header-brand">
+      <div class="brand-name-row">
+        <span class="brand-katalog">KATALOG&nbsp;</span><span class="brand-system">SYSTEM</span>
+      </div>
+      <div class="brand-sub">moduł rzeczoznawcy</div>
+    </div>
+    <div class="header-center" id="header-center" style="display:none">
+      <button class="btn-home" onclick="goHome()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Strona główna
+      </button>
     </div>
     <span class="print-date" style="display:none" id="print-date"></span>
     <div class="header-status">
@@ -552,10 +562,6 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
       <button class="btn btn-outline btn-xs" id="btn-admin" onclick="openAdmin()" style="display:none">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Admin
-      </button>
-      <button class="btn-home" onclick="goHome()" title="Strona główna">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Strona główna
       </button>
       <button class="btn-logout" onclick="logout()">Wyloguj</button>
     </div>
@@ -1236,8 +1242,11 @@ async function afterSignIn() {
 }
 
 async function loadProfile() {
-  const { data } = await sb.from('profiles').select('role').eq('id', currentUser.id).single();
+  const { data } = await sb.from('profiles').select('role,email').eq('id', currentUser.id).single();
   currentRole = data?.role || 'nowy';
+  if (currentUser?.email && !data?.email) {
+    await sb.from('profiles').update({ email: currentUser.email }).eq('id', currentUser.id);
+  }
 }
 
 function updateUserInfo() {
@@ -1248,6 +1257,7 @@ function updateUserInfo() {
   badge.className = `role-badge role-${currentRole}`;
   document.getElementById('btn-admin').style.display = currentRole === 'admin' ? '' : 'none';
   document.getElementById('header-user').style.display = '';
+  document.getElementById('header-center').style.display = '';
   document.getElementById('status-dot').textContent = 'AKTYWNY';
 }
 
@@ -1280,6 +1290,7 @@ function showLogin() {
   document.getElementById('app-container').style.display = 'none';
   document.getElementById('ov-login').classList.add('open');
   document.getElementById('header-user').style.display = 'none';
+  document.getElementById('header-center').style.display = 'none';
   document.getElementById('status-dot').textContent = 'WYLOGOWANY';
   loginStep(1);
   document.getElementById('login-code').value = '';
@@ -2441,7 +2452,7 @@ async function renderAdminUsers() {
   wrap.innerHTML = '<div class="admin-empty">Ładowanie…</div>';
   document.getElementById('btn-del-selected').style.display = 'none';
   document.getElementById('del-sel-count').textContent = '0';
-  const { data, error } = await sb.from('profiles').select('*').order('email');
+  const { data, error } = await sb.rpc('get_profiles_with_email');
   if (error) { wrap.innerHTML=`<div class="admin-empty" style="color:var(--danger)">${esc(error.message)}</div>`; return; }
   if (!data?.length) { wrap.innerHTML='<div class="admin-empty">Brak użytkowników w bazie.</div>'; return; }
   wrap.innerHTML = data.map(u => {

@@ -62,6 +62,17 @@ RETURNS TEXT AS $$
   SELECT role FROM public.profiles WHERE id = auth.uid();
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
+-- 4b. HELPER: profile z emailami dla panelu admina (łączy z auth.users)
+CREATE OR REPLACE FUNCTION public.get_profiles_with_email()
+RETURNS TABLE(id uuid, role text, email text)
+LANGUAGE sql SECURITY DEFINER
+AS $$
+  SELECT p.id, p.role, COALESCE(p.email, u.email) AS email
+  FROM public.profiles p
+  JOIN auth.users u ON u.id = p.id
+  ORDER BY u.email;
+$$;
+
 -- 5. RLS
 ALTER TABLE parts       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE links       ENABLE ROW LEVEL SECURITY;
@@ -99,8 +110,10 @@ CREATE POLICY "delete_cats" ON custom_cats FOR DELETE TO authenticated USING (ge
 -- Profiles
 DROP POLICY IF EXISTS "read_profile"   ON profiles;
 DROP POLICY IF EXISTS "insert_profile" ON profiles;
+DROP POLICY IF EXISTS "update_profile" ON profiles;
 CREATE POLICY "read_profile"   ON profiles FOR SELECT TO authenticated USING (auth.uid() = id OR get_my_role() = 'admin');
 CREATE POLICY "insert_profile" ON profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
+CREATE POLICY "update_profile" ON profiles FOR UPDATE TO authenticated USING (auth.uid() = id OR get_my_role() = 'admin');
 
 -- Storage
 DROP POLICY IF EXISTS "upload_photos" ON storage.objects;
