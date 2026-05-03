@@ -2320,7 +2320,6 @@ function openImport() {
   document.getElementById('ov-import').classList.add('open');
 }
 function updateImportSubcat() {
-  if(currentRole!=='admin') return;
   const top=document.getElementById('imp-cat').value;
   const subs=subCatsOf(top);
   const row=document.getElementById('imp-subcat-row');
@@ -2398,7 +2397,7 @@ async function doImport() {
   const dataRows=data.slice(hrow+1).filter(r=>r.some(c=>c!==''&&c!=null));
 
   const topCat=document.getElementById('imp-cat').value||DEFAULT_CATS[0];
-  const subCat=currentRole==='admin'?document.getElementById('imp-subcat').value:'';
+  const subCat=document.getElementById('imp-subcat').value;
   const selectedCat=subCat?`${topCat}/${subCat}`:topCat;
   const colIdx={
     name:     document.getElementById('map-name').value,
@@ -2785,7 +2784,7 @@ async function confirmMultiDel() {
 function findDuplicates() {
   const groups={};
   parts.forEach(p=>{
-    const key=`${p.category}||${p.name.trim().toLowerCase()}`;
+    const key=`${p.category}||${p.name.trim().toLowerCase()}||${p.priceNet}`;
     if(!groups[key]) groups[key]=[];
     groups[key].push(p);
   });
