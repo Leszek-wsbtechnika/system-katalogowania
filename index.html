@@ -550,6 +550,21 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 .ai-table .td-del button:hover{color:var(--danger);}
 .ai-spin{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
 .ai-status{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.72rem;color:var(--muted-lt);padding:20px;justify-content:center;}
+/* HELP OVERLAY */
+.help-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}
+@media(max-width:520px){.help-cards{grid-template-columns:1fr;}}
+.help-card{display:flex;flex-direction:column;gap:10px;padding:20px;border:1px solid var(--border-bright);background:var(--surface2);text-decoration:none;color:var(--text);transition:border-color .15s,background .15s;position:relative;}
+.help-card::before{content:'';position:absolute;top:-3px;left:-3px;width:9px;height:9px;border-top:2px solid var(--primary);border-left:2px solid var(--primary);opacity:0;transition:opacity .15s;}
+.help-card::after{content:'';position:absolute;bottom:-3px;right:-3px;width:9px;height:9px;border-bottom:2px solid var(--primary);border-right:2px solid var(--primary);opacity:0;transition:opacity .15s;}
+.help-card:hover{border-color:var(--primary);background:var(--primary-dim);}
+.help-card:hover::before,.help-card:hover::after{opacity:1;}
+.help-card-icon{font-size:1.6rem;line-height:1;}
+.help-card-title{font-family:var(--mono);font-size:.78rem;font-weight:700;letter-spacing:.08em;color:var(--primary);}
+.help-card-desc{font-size:.8rem;color:var(--text-dim);line-height:1.5;}
+.help-card-badge{display:inline-block;font-family:var(--mono);font-size:.6rem;padding:1px 8px;letter-spacing:.08em;margin-top:auto;align-self:flex-start;}
+.help-card-badge.badge-user{background:var(--primary-dim);color:var(--primary);border:1px solid oklch(55% 0.18 55/.30);}
+.help-card-badge.badge-admin{background:oklch(50% 0.20 25/.12);color:oklch(50% 0.20 25);border:1px solid oklch(50% 0.20 25/.30);}
+[data-theme="dark"] .help-card-badge.badge-admin{background:oklch(62% 0.20 25/.15);color:oklch(70% 0.20 25);border-color:oklch(62% 0.20 25/.35);}
 </style>
 </head>
 <body>
@@ -589,6 +604,10 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
     <div class="header-user" id="header-user" style="display:none">
       <span class="user-email" id="user-email"></span>
       <span class="role-badge" id="user-role-badge"></span>
+      <button class="btn btn-outline btn-xs" id="btn-help" onclick="openHelp()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Pomoc
+      </button>
       <button class="btn btn-outline btn-xs" id="btn-admin" onclick="openAdmin()" style="display:none">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Admin
@@ -717,6 +736,29 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
   Usuń zaznaczone <span class="zest-badge" id="del-float-count">0</span>
 </button>
+
+<!-- ========== MODAL: POMOC ========== -->
+<div class="overlay" id="ov-help">
+  <div class="modal modal-sm">
+    <button class="close-btn" onclick="closeHelp()">[ ✕ ]</button>
+    <h2>// Pomoc</h2>
+    <p style="font-family:var(--mono);font-size:.72rem;color:var(--muted-lt);margin-bottom:16px">Wybierz instrukcję, którą chcesz otworzyć. Otwiera się w nowej zakładce.</p>
+    <div class="help-cards">
+      <a class="help-card" href="pomoc/instrukcja_uzytkownik.html" target="_blank" rel="noopener">
+        <div class="help-card-icon">📖</div>
+        <div class="help-card-title">Instrukcja użytkownika</div>
+        <div class="help-card-desc">Logowanie, przeglądanie, dodawanie części, tworzenie wycen. Krok po kroku, w prostym języku.</div>
+        <span class="help-card-badge badge-user">NOWY / EDITOR</span>
+      </a>
+      <a class="help-card" id="help-card-admin" href="pomoc/instrukcja_admin.html" target="_blank" rel="noopener" style="display:none">
+        <div class="help-card-icon">⚙️</div>
+        <div class="help-card-title">Instrukcja administratora</div>
+        <div class="help-card-desc">Import, eksport, zarządzanie kategoriami, użytkownikami i uprawnieniami.</div>
+        <span class="help-card-badge badge-admin">ADMIN</span>
+      </a>
+    </div>
+  </div>
+</div>
 
 <!-- ========== MODAL: ADD / EDIT ========== -->
 <div class="overlay" id="ov-part">
@@ -872,6 +914,13 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
             <label>Podkategoria</label>
             <select id="ai-subcat"></select>
           </div>
+        </div>
+        <div style="margin-top:10px">
+          <label>Ceny w dokumencie są</label>
+          <select id="ai-price-type" style="min-width:200px">
+            <option value="gross">Brutto (z VAT 23%)</option>
+            <option value="net">Netto (bez VAT)</option>
+          </select>
         </div>
         <div class="modal-actions" style="margin-top:12px;justify-content:flex-start">
           <button class="btn btn-primary btn-sm" id="ai-extract-btn" onclick="extractWithAI()">
@@ -2432,6 +2481,13 @@ async function doImport() {
 }
 
 /* ============================================================  ADMIN PANEL  */
+function openHelp() {
+  const adminCard = document.getElementById('help-card-admin');
+  if (adminCard) adminCard.style.display = currentRole === 'admin' ? '' : 'none';
+  document.getElementById('ov-help').classList.add('open');
+}
+function closeHelp() { document.getElementById('ov-help').classList.remove('open'); }
+
 async function openAdmin() {
   document.getElementById('ov-admin').classList.add('open');
   setAdminTab('users');
@@ -2670,7 +2726,17 @@ async function extractWithAI() {
 }
 
 function renderAiTable(rows) {
-  document.getElementById('ai-tbody').innerHTML = rows.map((r, i) => aiRow(r, i)).join('');
+  const priceType = document.getElementById('ai-price-type')?.value ?? 'gross';
+  const normalized = rows.map(r => {
+    const raw = r.priceGross ?? r.priceNet ?? null;
+    if (raw == null) return r;
+    if (priceType === 'net') {
+      return { ...r, priceNet: raw, priceGross: round2(raw * (1 + VAT)) };
+    } else {
+      return { ...r, priceGross: raw, priceNet: round2(raw / (1 + VAT)) };
+    }
+  });
+  document.getElementById('ai-tbody').innerHTML = normalized.map((r, i) => aiRow(r, i)).join('');
 }
 
 function aiRow(r, i) {
@@ -2711,11 +2777,13 @@ async function doAiImport() {
     if (!name) continue;
     const net = parseFloat(inputs[1].value) || null;
     const gross = parseFloat(inputs[2].value) || null;
+    const computedNet = net ?? (gross != null ? round2(gross / (1 + VAT)) : null);
+    const computedGross = gross ?? (net != null ? round2(net * (1 + VAT)) : null);
     records.push({
       category,
       name,
-      price_net: net,
-      price_gross: gross ?? (net != null ? round2(net * (1 + VAT)) : null),
+      price_net: computedNet,
+      price_gross: computedGross,
       description: inputs[3].value.trim() || null,
       photo: null,
     });
