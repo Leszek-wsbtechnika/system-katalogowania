@@ -80,7 +80,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* HEADER */
 header{background:var(--surface);border-bottom:1px solid var(--border-bright);border-left:3px solid var(--brand-orange);transition:background .25s;position:sticky;top:0;z-index:300;}
 .header-inner{display:flex;align-items:stretch;max-width:1280px;margin:0 auto;padding:0 24px;min-height:96px;}
-.header-brand{display:flex;flex-direction:column;justify-content:center;padding:0 26px;gap:6px;border-right:1px solid var(--border);min-width:200px;flex-shrink:0;}
+.header-brand{display:flex;flex-direction:column;justify-content:center;padding:0 26px;gap:6px;border-right:1px solid var(--border);min-width:200px;flex-shrink:0;cursor:pointer;}
 .brand-name-row{display:flex;align-items:baseline;line-height:1;}
 .brand-katalog{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:900;letter-spacing:.08em;color:var(--text);}
 .brand-system{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:900;letter-spacing:.08em;color:var(--brand-orange);}
@@ -571,7 +571,7 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 
 <header>
   <div class="header-inner">
-    <div class="header-brand">
+    <div class="header-brand" onclick="goHome()">
       <div class="brand-name-row">
         <span class="brand-katalog">KATALOG&nbsp;</span><span class="brand-system">SYSTEM</span>
       </div>
@@ -1400,7 +1400,16 @@ function showApp() {
   goHome();
 }
 
+function resetSearch() {
+  const s = document.getElementById('search-inp');      if (s) s.value = '';
+  const l = document.getElementById('link-search-inp'); if (l) l.value = '';
+  linkSearch = '';
+}
+
 function goHome() {
+  filterCat = '';
+  drillCat  = '';
+  resetSearch();
   const hp = document.getElementById('home-page');
   const main = document.querySelector('#app-container > .container');
   hp.style.display = '';
@@ -1715,10 +1724,11 @@ function setCat(c) {
   } else {
     filterCat = c;
   }
+  resetSearch();
   renderAll();
 }
-function setSubCat(path) { filterCat = path; renderAll(); }
-function drillBack() { drillCat = ''; filterCat = ''; renderAll(); }
+function setSubCat(path) { filterCat = path; resetSearch(); renderAll(); }
+function drillBack() { drillCat = ''; filterCat = ''; resetSearch(); renderAll(); }
 
 function renderContent() {
   const filtered = getFiltered();
