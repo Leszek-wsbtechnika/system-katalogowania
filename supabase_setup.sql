@@ -33,8 +33,13 @@ CREATE TABLE IF NOT EXISTS profiles (
   id    UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT,
   role  TEXT NOT NULL DEFAULT 'nowy'
-        CHECK (role IN ('nowy','editor','admin'))
+        CHECK (role IN ('nowy','editor','admin','superadmin'))
 );
+
+-- Jeśli tabela już istnieje z poprzednim CHECK — wymień constraint:
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE profiles ADD  CONSTRAINT profiles_role_check
+  CHECK (role IN ('nowy','editor','admin','superadmin'));
 
 CREATE TABLE IF NOT EXISTS allowed_emails (
   email TEXT PRIMARY KEY,
@@ -86,7 +91,7 @@ SECURITY DEFINER
 SET search_path = public, pg_catalog
 AS $$
 BEGIN
-  IF public.get_my_role() <> 'admin' THEN
+  IF public.get_my_role() <> 'superadmin' THEN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
   END IF;
   RETURN QUERY
@@ -97,7 +102,7 @@ BEGIN
 END;
 $$;
 
--- 4c. RPC: usuwanie użytkowników (tylko admin, kaskaduje profiles przez FK)
+-- 4c. RPC: usuwanie użytkowników (tylko superadmin, kaskaduje profiles przez FK)
 CREATE OR REPLACE FUNCTION public.delete_users(user_ids uuid[])
 RETURNS void
 LANGUAGE plpgsql
@@ -105,11 +110,16 @@ SECURITY DEFINER
 SET search_path = public, pg_catalog
 AS $$
 BEGIN
-  IF public.get_my_role() <> 'admin' THEN
+  IF public.get_my_role() <> 'superadmin' THEN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
   END IF;
   IF auth.uid() = ANY(user_ids) THEN
     RAISE EXCEPTION 'cannot delete self' USING ERRCODE = '22023';
+  END IF;
+  -- Ochrona przed usunięciem ostatniego superadmina:
+  IF EXISTS (SELECT 1 FROM public.profiles WHERE id = ANY(user_ids) AND role = 'superadmin')
+     AND (SELECT COUNT(*) FROM public.profiles WHERE role = 'superadmin') <= 1 THEN
+    RAISE EXCEPTION 'cannot delete last superadmin' USING ERRCODE = '22023';
   END IF;
   DELETE FROM auth.users WHERE id = ANY(user_ids);
 END;
@@ -131,9 +141,9 @@ DROP POLICY IF EXISTS "insert_parts" ON parts;
 DROP POLICY IF EXISTS "update_parts" ON parts;
 DROP POLICY IF EXISTS "delete_parts" ON parts;
 CREATE POLICY "read_parts"   ON parts FOR SELECT TO authenticated USING (true);
-CREATE POLICY "insert_parts" ON parts FOR INSERT TO authenticated WITH CHECK (get_my_role() IN ('nowy','editor','admin'));
-CREATE POLICY "update_parts" ON parts FOR UPDATE TO authenticated USING (get_my_role() IN ('editor','admin')) WITH CHECK (get_my_role() IN ('editor','admin'));
-CREATE POLICY "delete_parts" ON parts FOR DELETE TO authenticated USING (get_my_role() = 'admin');
+CREATE POLICY "insert_parts" ON parts FOR INSERT TO authenticated WITH CHECK (get_my_role() IN ('nowy','editor','admin','superadmin'));
+CREATE POLICY "update_parts" ON parts FOR UPDATE TO authenticated USING (get_my_role() IN ('editor','admin','superadmin')) WITH CHECK (get_my_role() IN ('editor','admin','superadmin'));
+CREATE POLICY "delete_parts" ON parts FOR DELETE TO authenticated USING (get_my_role() IN ('admin','superadmin'));
 
 -- Links
 DROP POLICY IF EXISTS "read_links"   ON links;
@@ -141,17 +151,17 @@ DROP POLICY IF EXISTS "insert_links" ON links;
 DROP POLICY IF EXISTS "update_links" ON links;
 DROP POLICY IF EXISTS "delete_links" ON links;
 CREATE POLICY "read_links"   ON links FOR SELECT TO authenticated USING (true);
-CREATE POLICY "insert_links" ON links FOR INSERT TO authenticated WITH CHECK (get_my_role() IN ('nowy','editor','admin'));
-CREATE POLICY "update_links" ON links FOR UPDATE TO authenticated USING (get_my_role() IN ('editor','admin')) WITH CHECK (get_my_role() IN ('editor','admin'));
-CREATE POLICY "delete_links" ON links FOR DELETE TO authenticated USING (get_my_role() = 'admin');
+CREATE POLICY "insert_links" ON links FOR INSERT TO authenticated WITH CHECK (get_my_role() IN ('nowy','editor','admin','superadmin'));
+CREATE POLICY "update_links" ON links FOR UPDATE TO authenticated USING (get_my_role() IN ('editor','admin','superadmin')) WITH CHECK (get_my_role() IN ('editor','admin','superadmin'));
+CREATE POLICY "delete_links" ON links FOR DELETE TO authenticated USING (get_my_role() IN ('admin','superadmin'));
 
 -- Custom cats
 DROP POLICY IF EXISTS "read_cats"   ON custom_cats;
 DROP POLICY IF EXISTS "insert_cats" ON custom_cats;
 DROP POLICY IF EXISTS "delete_cats" ON custom_cats;
 CREATE POLICY "read_cats"   ON custom_cats FOR SELECT TO authenticated USING (true);
-CREATE POLICY "insert_cats" ON custom_cats FOR INSERT TO authenticated WITH CHECK (get_my_role() IN ('editor','admin'));
-CREATE POLICY "delete_cats" ON custom_cats FOR DELETE TO authenticated USING (get_my_role() = 'admin');
+CREATE POLICY "insert_cats" ON custom_cats FOR INSERT TO authenticated WITH CHECK (get_my_role() IN ('editor','admin','superadmin'));
+CREATE POLICY "delete_cats" ON custom_cats FOR DELETE TO authenticated USING (get_my_role() IN ('admin','superadmin'));
 
 -- Profiles
 -- Zabezpieczenie przed self-promote do admina: column-level GRANT pozwala
@@ -170,11 +180,9 @@ CREATE POLICY "update_profile" ON profiles FOR UPDATE TO authenticated
 REVOKE UPDATE ON public.profiles FROM authenticated, anon;
 GRANT  UPDATE (email) ON public.profiles TO authenticated;
 
--- 5b. ADMIN: zmiana roli innemu użytkownikowi.
--- UWAGA: frontend nie wystawia tej funkcji w UI (panel admin pokazuje role
--- tylko do odczytu — admin nie widzi emaili nowych userów dopóki nie dostaną
--- profilu, więc zmiana ról przez UI była mało użyteczna).
--- Admin zmienia role bezpośrednio w Supabase SQL Editor:
+-- 5b. SUPERADMIN: zmiana roli innemu użytkownikowi.
+-- Frontend nie wystawia tej funkcji w UI — superadmin zmienia role
+-- bezpośrednio w Supabase SQL Editor:
 --   SELECT public.set_user_role('<uuid>', 'editor');
 -- albo:
 --   UPDATE profiles SET role = 'editor' WHERE email = 'user@example.com';
@@ -186,13 +194,13 @@ SECURITY DEFINER
 SET search_path = public, pg_catalog
 AS $$
 BEGIN
-  IF public.get_my_role() <> 'admin' THEN
+  IF public.get_my_role() <> 'superadmin' THEN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
   END IF;
-  IF new_role NOT IN ('nowy','editor','admin') THEN
+  IF new_role NOT IN ('nowy','editor','admin','superadmin') THEN
     RAISE EXCEPTION 'invalid role' USING ERRCODE = '22023';
   END IF;
-  IF target_id = auth.uid() AND new_role <> 'admin' THEN
+  IF target_id = auth.uid() AND new_role <> 'superadmin' THEN
     RAISE EXCEPTION 'cannot demote self' USING ERRCODE = '22023';
   END IF;
   UPDATE public.profiles SET role = new_role WHERE id = target_id;
@@ -209,8 +217,8 @@ DROP POLICY IF EXISTS "read_allowed_emails"   ON allowed_emails;
 DROP POLICY IF EXISTS "insert_allowed_emails" ON allowed_emails;
 DROP POLICY IF EXISTS "delete_allowed_emails" ON allowed_emails;
 CREATE POLICY "read_allowed_emails"   ON allowed_emails FOR SELECT USING (true);
-CREATE POLICY "insert_allowed_emails" ON allowed_emails FOR INSERT TO authenticated WITH CHECK (get_my_role() = 'admin');
-CREATE POLICY "delete_allowed_emails" ON allowed_emails FOR DELETE TO authenticated USING (get_my_role() = 'admin');
+CREATE POLICY "insert_allowed_emails" ON allowed_emails FOR INSERT TO authenticated WITH CHECK (get_my_role() = 'superadmin');
+CREATE POLICY "delete_allowed_emails" ON allowed_emails FOR DELETE TO authenticated USING (get_my_role() = 'superadmin');
 
 -- Storage policies
 -- Ścieżki:
@@ -231,14 +239,14 @@ CREATE POLICY "upload_part_photos" ON storage.objects FOR INSERT TO authenticate
   WITH CHECK (
     bucket_id = 'photos'
     AND (storage.foldername(name))[1] IS DISTINCT FROM 'cat_images'
-    AND public.get_my_role() IN ('nowy','editor','admin')
+    AND public.get_my_role() IN ('nowy','editor','admin','superadmin')
   );
 
 CREATE POLICY "upload_cat_photos" ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (
     bucket_id = 'photos'
     AND (storage.foldername(name))[1] = 'cat_images'
-    AND public.get_my_role() = 'admin'
+    AND public.get_my_role() IN ('admin','superadmin')
   );
 
 -- UPDATE pokrywa upsert:true dla cat_images (uploadCatImg używa upsert)
@@ -252,25 +260,26 @@ CREATE POLICY "update_cat_photos" ON storage.objects FOR UPDATE TO authenticated
   WITH CHECK (
     bucket_id = 'photos'
     AND (storage.foldername(name))[1] = 'cat_images'
-    AND public.get_my_role() = 'admin'
+    AND public.get_my_role() IN ('admin','superadmin')
   );
 
 CREATE POLICY "delete_part_photos" ON storage.objects FOR DELETE TO authenticated
   USING (
     bucket_id = 'photos'
     AND (storage.foldername(name))[1] IS DISTINCT FROM 'cat_images'
-    AND public.get_my_role() IN ('editor','admin')
+    AND public.get_my_role() IN ('editor','admin','superadmin')
   );
 
 CREATE POLICY "delete_cat_photos" ON storage.objects FOR DELETE TO authenticated
   USING (
     bucket_id = 'photos'
     AND (storage.foldername(name))[1] = 'cat_images'
-    AND public.get_my_role() = 'admin'
+    AND public.get_my_role() IN ('admin','superadmin')
   );
 
--- 6. PO REJESTRACJI: zmień swoją rolę na admin (jednorazowo, bezpośrednio w SQL)
--- UPDATE public.profiles SET role = 'admin' WHERE email = 'twój@email.com';
+-- 6. PO REJESTRACJI: zmień swoją rolę na superadmin (jednorazowo, bezpośrednio w SQL).
+-- Musi być DOKŁADNIE jeden superadmin (właściciel/projektant systemu):
+-- UPDATE public.profiles SET role = 'superadmin' WHERE email = 'wsbtechnika@gmail.com';
 
 -- 7. MIGRACJA: zmiana nazwy kategorii 'Przyczepa' → 'Przyczepki'
 -- Uruchom TYLKO jeśli masz dane z kategorią 'Przyczepa':

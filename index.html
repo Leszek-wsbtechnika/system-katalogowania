@@ -421,9 +421,11 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 .user-email{font-family:var(--mono);font-size:.62rem;color:var(--text-dim);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;}
 .role-badge{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;padding:2px 8px;white-space:nowrap;}
 .role-badge.role-admin {background:oklch(50% 0.20 25 / .12);color:oklch(50% 0.20 25);border:1px solid oklch(50% 0.20 25 / .30);}
+.role-badge.role-superadmin {background:oklch(40% 0.22 295 / .14);color:oklch(40% 0.22 295);border:1px solid oklch(40% 0.22 295 / .35);}
 .role-badge.role-editor{background:var(--accent-dim);color:var(--accent);border:1px solid oklch(48% 0.14 145 / .30);}
 .role-badge.role-nowy  {background:var(--primary-dim);color:var(--primary);border:1px solid oklch(55% 0.18 55 / .30);}
 [data-theme="dark"] .role-badge.role-admin {background:oklch(62% 0.20 25 / .15);color:oklch(70% 0.20 25);border-color:oklch(62% 0.20 25 / .35);}
+[data-theme="dark"] .role-badge.role-superadmin {background:oklch(60% 0.22 295 / .15);color:oklch(75% 0.22 295);border-color:oklch(60% 0.22 295 / .35);}
 [data-theme="dark"] .role-badge.role-editor{background:oklch(62% 0.14 145 / .15);color:oklch(70% 0.14 145);border-color:oklch(62% 0.14 145 / .35);}
 [data-theme="dark"] .role-badge.role-nowy  {background:oklch(68% 0.18 55 / .15);color:oklch(75% 0.18 55);border-color:oklch(68% 0.18 55 / .35);}
 .btn-logout{background:transparent;border:1px solid var(--border-bright);color:var(--muted-lt);cursor:pointer;padding:5px 10px;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;transition:all .2s;white-space:nowrap;}
@@ -1308,6 +1310,7 @@ async function initAuth() {
     } else if (event === 'SIGNED_OUT') {
       appReady = false;
       currentUser = null; currentRole = 'nowy';
+      sessionStorage.removeItem('admin_pin_ok');
       showLogin();
     }
     // TOKEN_REFRESHED i INITIAL_SESSION ignorujemy — nie przeładowujemy danych
@@ -1337,19 +1340,19 @@ async function loadProfile() {
 function updateUserInfo() {
   document.getElementById('user-email').textContent = currentUser?.email || '';
   const badge = document.getElementById('user-role-badge');
-  const labels = { nowy:'NOWY', editor:'EDITOR', admin:'ADMIN' };
+  const labels = { nowy:'NOWY', editor:'EDITOR', admin:'ADMIN', superadmin:'SUPERADMIN' };
   badge.textContent = labels[currentRole] || currentRole.toUpperCase();
   badge.className = `role-badge role-${currentRole}`;
-  document.getElementById('btn-admin').style.display = currentRole === 'admin' ? '' : 'none';
+  document.getElementById('btn-admin').style.display = currentRole === 'superadmin' ? '' : 'none';
   document.getElementById('header-user').style.display = '';
   document.getElementById('header-center').style.display = '';
   document.getElementById('status-dot').textContent = 'AKTYWNY';
 }
 
 function applyRoleUI() {
-  const isAdmin   = currentRole === 'admin';
-  const canAdd    = ['nowy','editor','admin'].includes(currentRole);
-  const canEdit   = ['editor','admin'].includes(currentRole);
+  const isAdmin   = currentRole === 'admin' || currentRole === 'superadmin';
+  const canAdd    = ['nowy','editor','admin','superadmin'].includes(currentRole);
+  const canEdit   = ['editor','admin','superadmin'].includes(currentRole);
   const btnAdd    = document.getElementById('btn-add-part');
   const btnLnk    = document.getElementById('btn-add-link');
   const btnImp    = document.getElementById('btn-import');
@@ -1542,6 +1545,7 @@ async function logout() {
   if (!confirm('Wylogować się?')) return;
   zestawienie = [];
   localStorage.removeItem(LS.zest);
+  sessionStorage.removeItem('admin_pin_ok');
   await sb.auth.signOut();
 }
 
@@ -1735,8 +1739,8 @@ function renderContent() {
 
 /* ============================================================  GRID  */
 function renderGrid(arr) {
-  const canEdit   = ['editor','admin'].includes(currentRole);
-  const canDelete = currentRole === 'admin';
+  const canEdit   = ['editor','admin','superadmin'].includes(currentRole);
+  const canDelete = ['admin','superadmin'].includes(currentRole);
   if (!arr.length) return emptyState();
   return `<div class="cards-grid">${arr.map(p => {
     const sel = zestawienie.includes(p.id);
@@ -1773,8 +1777,8 @@ function renderGrid(arr) {
 
 /* ============================================================  TABLE  */
 function renderTable(arr) {
-  const canEdit   = ['editor','admin'].includes(currentRole);
-  const canDelete = currentRole === 'admin';
+  const canEdit   = ['editor','admin','superadmin'].includes(currentRole);
+  const canDelete = ['admin','superadmin'].includes(currentRole);
   if (!arr.length) return emptyState();
   const rows = arr.map(p => {
     const sel = zestawienie.includes(p.id);
@@ -2177,7 +2181,7 @@ function renderCatList() {
       </div>
       <div style="display:flex;gap:6px;align-items:center">
         <button class="btn btn-outline btn-xs" data-top="${esc(c)}" onclick="showSubCatAdd(this.dataset.top)">+ podkat.</button>
-        ${currentRole==='admin'?`<button class="btn btn-outline btn-xs" data-cat="${esc(c)}" onclick="uploadCatImg(this.dataset.cat)" title="Ustaw zdjęcie kategorii">📷</button>${catImgs[c]?`<button class="btn-icon" data-cat="${esc(c)}" onclick="removeCatImg(this.dataset.cat)" style="color:var(--danger)" title="Usuń zdjęcie"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}`:''}
+        ${(currentRole==='admin'||currentRole==='superadmin')?`<button class="btn btn-outline btn-xs" data-cat="${esc(c)}" onclick="uploadCatImg(this.dataset.cat)" title="Ustaw zdjęcie kategorii">📷</button>${catImgs[c]?`<button class="btn-icon" data-cat="${esc(c)}" onclick="removeCatImg(this.dataset.cat)" style="color:var(--danger)" title="Usuń zdjęcie"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}`:''}
         ${!isFixed?`<button class="btn-icon" data-cat="${esc(c)}" onclick="removeCat(this.dataset.cat)" style="color:var(--danger)" title="Usuń kategorię"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}
       </div>
     </div>
@@ -2491,12 +2495,25 @@ async function doImport() {
 /* ============================================================  ADMIN PANEL  */
 function openHelp() {
   const adminCard = document.getElementById('help-card-admin');
-  if (adminCard) adminCard.style.display = currentRole === 'admin' ? '' : 'none';
+  if (adminCard) adminCard.style.display = currentRole === 'superadmin' ? '' : 'none';
   document.getElementById('ov-help').classList.add('open');
 }
 function closeHelp() { document.getElementById('ov-help').classList.remove('open'); }
 
+// UWAGA: PIN poniżej to NIE bariera bezpieczeństwa (kod jest w przeglądarce
+// i każdy z DevTools go zobaczy). Służy WYŁĄCZNIE jako prosty ekran ochronny
+// przy współdzielonych komputerach, żeby przypadkowy admin nie wszedł do
+// panelu. Realna kontrola dostępu siedzi w RLS Supabase (rola 'superadmin').
+const ADMIN_PIN = '224200';
+
 async function openAdmin() {
+  if (currentRole !== 'superadmin') { toast('Brak uprawnień', 'error'); return; }
+  if (sessionStorage.getItem('admin_pin_ok') !== '1') {
+    const pin = prompt('PIN dostępu do panelu (6 cyfr):');
+    if (pin === null) return;
+    if (pin !== ADMIN_PIN) { toast('Błędny PIN', 'error'); return; }
+    sessionStorage.setItem('admin_pin_ok', '1');
+  }
   document.getElementById('ov-admin').classList.add('open');
   setAdminTab('users');
 }
