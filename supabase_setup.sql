@@ -170,7 +170,15 @@ CREATE POLICY "update_profile" ON profiles FOR UPDATE TO authenticated
 REVOKE UPDATE ON public.profiles FROM authenticated, anon;
 GRANT  UPDATE (email) ON public.profiles TO authenticated;
 
--- 5b. ADMIN: zmiana roli innemu użytkownikowi (omija column-grant przez SECURITY DEFINER)
+-- 5b. ADMIN: zmiana roli innemu użytkownikowi.
+-- UWAGA: frontend nie wystawia tej funkcji w UI (panel admin pokazuje role
+-- tylko do odczytu — admin nie widzi emaili nowych userów dopóki nie dostaną
+-- profilu, więc zmiana ról przez UI była mało użyteczna).
+-- Admin zmienia role bezpośrednio w Supabase SQL Editor:
+--   SELECT public.set_user_role('<uuid>', 'editor');
+-- albo:
+--   UPDATE profiles SET role = 'editor' WHERE email = 'user@example.com';
+-- (drugi wariant wymaga service_role, działa z poziomu SQL Editora).
 CREATE OR REPLACE FUNCTION public.set_user_role(target_id uuid, new_role text)
 RETURNS void
 LANGUAGE plpgsql

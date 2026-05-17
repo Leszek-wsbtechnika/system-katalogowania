@@ -494,8 +494,6 @@ input[type="checkbox"]{width:auto;padding:0;border:1px solid var(--border-bright
 /* ADMIN MODAL */
 .admin-user-row{display:flex;align-items:center;gap:12px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);margin-bottom:6px;}
 .admin-email{flex:1;font-family:var(--mono);font-size:.75rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.admin-role-sel{padding:5px 8px;border:1px solid var(--border-bright);background:var(--surface);color:var(--text);font-family:var(--mono);font-size:.7rem;cursor:pointer;min-width:90px;}
-.admin-role-sel:focus{outline:none;border-color:var(--primary);}
 .admin-self{border-left:2px solid var(--accent);}
 .admin-empty{font-family:var(--mono);font-size:.75rem;color:var(--muted-lt);text-align:center;padding:20px;}
 .admin-info{font-family:var(--mono);font-size:.65rem;color:var(--muted-lt);background:var(--surface2);border:1px solid var(--border);padding:10px 12px;margin-bottom:14px;line-height:1.6;}
@@ -2563,22 +2561,9 @@ async function renderAdminUsers() {
     return `<div class="admin-user-row${isSelf?' admin-self':''}">
       ${isSelf ? '<span style="width:16px"></span>' : `<input type="checkbox" class="admin-user-chk" data-uid="${u.id}" data-email="${esc(u.email||u.id)}" onchange="updateDelBtn()">`}
       <span class="admin-email">${esc(u.email||u.id)}</span>
-      ${isSelf ? `<span class="role-badge role-${u.role}">${u.role.toUpperCase()} (Ty)</span>` :
-        `<select class="admin-role-sel" data-uid="${u.id}" onchange="changeUserRole(this)">
-          <option value="nowy"   ${u.role==='nowy'  ?'selected':''}>nowy</option>
-          <option value="editor" ${u.role==='editor'?'selected':''}>editor</option>
-          <option value="admin"  ${u.role==='admin' ?'selected':''}>admin</option>
-        </select>`}
+      <span class="role-badge role-${u.role}">${u.role.toUpperCase()}${isSelf?' (Ty)':''}</span>
     </div>`;
   }).join('');
-}
-
-async function changeUserRole(sel) {
-  const uid = sel.dataset.uid;
-  const role = sel.value;
-  const { error } = await sb.rpc('set_user_role', { target_id: uid, new_role: role });
-  if (error) { toast('Błąd: '+error.message,'error'); return; }
-  toast(`Rola zmieniona na "${role}"`, 'success');
 }
 
 function updateDelBtn() {
